@@ -5,6 +5,7 @@ using Unity.Cinemachine;
 
 public class GameManager : MonoBehaviour
 {
+    public Transform playerHead;
     private void Awake()
     {
         Camera.main.gameObject.AddComponent<CinemachineBrain>();
