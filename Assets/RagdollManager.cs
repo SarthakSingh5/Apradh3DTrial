@@ -16,7 +16,18 @@ public class RagdollManager : MonoBehaviour
 
     public void TriggerRagdoll()
     {
+        // Disable the Animator so it doesn't override the ragdoll physics.
+        Animator anim = GetComponent<Animator>();
+        if (anim != null)
+        {
+            anim.enabled = false;
+        }
+
+        // Now enable physics on all child rigidbodies.
         foreach (Rigidbody rb in rbs)
+        {
             rb.isKinematic = false;
+        }
     }
+
 }
