@@ -20,16 +20,16 @@ public class Bullet : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if(collision.gameObject.GetComponentInParent<EnemyHealth>())
+        if(collision.gameObject.GetComponentInParent<NPCHealth>())
         {
-            EnemyHealth enemyHealth = collision.gameObject.GetComponentInParent<EnemyHealth>();
-            enemyHealth.TakeDamage(weapon.damage);
+            NPCHealth npcHealth = collision.gameObject.GetComponentInParent<NPCHealth>();
+            npcHealth.TakeDamage(weapon.damage);
 
-            if(enemyHealth.health <= 0 && enemyHealth.isDead == false)
+            if(npcHealth.health <= 0 && npcHealth.isDead == false)
             {
                 Rigidbody rb = collision.gameObject.GetComponentInChildren<Rigidbody>();
                 rb.AddForce(dir * weapon.enemyKickbackForce, ForceMode.Impulse);
-                enemyHealth.isDead = true;
+                npcHealth.isDead = true;
             }
         }
         Destroy(this.gameObject);

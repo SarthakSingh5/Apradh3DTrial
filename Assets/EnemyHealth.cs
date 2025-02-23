@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class EnemyHealth : MonoBehaviour
+public class NPCHealth : MonoBehaviour
 {
     [SerializeField] public float health;
     RagdollManager ragdollManager;
@@ -27,6 +27,7 @@ public class EnemyHealth : MonoBehaviour
     void EnemyDeath()
     {
         ragdollManager.TriggerRagdoll();
+        isDead=true;
         Debug.Log("Death");
     }
 }
