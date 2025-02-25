@@ -18,7 +18,7 @@ public class NPCPatrolState : NPCMovementBaseState
             SetNewPatrolPoint(npcMovement);
         }
 
-        if(npcMovement.detectionManager.PlayerSeen())
+        if(npcMovement.detectionManager.IsEnemyDetected())
         {
             npcMovement.SwitchState(npcMovement.NPCAttack);
         }

@@ -10,6 +10,8 @@ public class NPCMovementStateManager : MonoBehaviour
     NPCHealth npcHealth;
     public DetectionStateManager detectionManager;
 
+    public NPCWeaponManager npcWeaponManager;
+
     public NPCMovementBaseState currentState;
     public NPCPatrolState NPCPatrol = new NPCPatrolState();
     public NPCAttackState NPCAttack = new NPCAttackState();
@@ -21,6 +23,7 @@ public class NPCMovementStateManager : MonoBehaviour
         npcAgent = GetComponent<NavMeshAgent>();
         npcHealth = GetComponent<NPCHealth>();
         detectionManager = GetComponent<DetectionStateManager>();
+        npcWeaponManager = GetComponentInChildren<NPCWeaponManager>();
 
         SwitchState(NPCPatrol);
     }

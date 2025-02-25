@@ -1,55 +1,77 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class DetectionStateManager : MonoBehaviour
 {
-    [SerializeField] float lookDistance = 30, fov = 120;
+    [SerializeField] float lookDistance = 30f, fov = 120f;
     [SerializeField] Transform enemyEyes;
-    Transform playerHead;
-    GameManager gameManager;
+    [SerializeField] LayerMask detectionMask; // Layer mask for detecting NPCs and players
+    [SerializeField] bool isEnemy; // True for enemy NPCs, false for user team NPCs
+
+    public List<Transform> targets = new List<Transform>();
 
     void Start()
     {
-        gameManager = FindObjectOfType<GameManager>();
-        playerHead = gameManager.playerHead; // Using head instead of body
+        FindTargets();
     }
 
     private void FixedUpdate()
     {
-        if (PlayerSeen())
+        if (IsEnemyDetected())
         {
-            Debug.Log("GOTCHA");
-        }
-        else
-        {
-            Debug.Log("WHERED HE GO");
+            Debug.Log("Enemy Spotted!"+ targets[0].name);
         }
     }
 
-    public bool PlayerSeen()
+    void FindTargets()
     {
-        if (Vector3.Distance(enemyEyes.position, playerHead.position) > lookDistance)
-            return false;
+        targets.Clear();
+        GameObject[] allNPCs = GameObject.FindGameObjectsWithTag("NPC");
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
 
-        Vector3 dirToPlayer = (playerHead.position - enemyEyes.position).normalized;
-        float angleToPlayer = Vector3.Angle(enemyEyes.parent.forward, dirToPlayer);
-        
-
-        if (angleToPlayer > (fov / 2))
-            return false;
-
-        RaycastHit hit;
-        if (Physics.Raycast(enemyEyes.position, dirToPlayer, out hit, lookDistance))
+        foreach (GameObject npc in allNPCs)
         {
-            Debug.DrawLine(enemyEyes.position, hit.point, Color.green);
-
-            if (hit.transform == playerHead || hit.transform.root == playerHead.root)
+            if (npc.transform != transform) // Ignore self
             {
-                return true;
+                DetectionStateManager npcScript = npc.GetComponent<DetectionStateManager>();
+                if (npcScript && npcScript.isEnemy != isEnemy) // Detect only opposite teams
+                {
+                    targets.Add(npc.transform);
+                }
             }
         }
 
-        return false;
+        if (player != null && !isEnemy) // User NPCs detect player
+        {
+            targets.Add(player.transform);
+        }
+    }
+
+    public bool IsEnemyDetected()
+    {
+        foreach (Transform target in targets)
+        {
+            if (Vector3.Distance(enemyEyes.position, target.position) > lookDistance)
+                return false;
+
+            Vector3 dirToTarget = (target.position - enemyEyes.position).normalized;
+            float angleToTarget = Vector3.Angle(enemyEyes.forward, dirToTarget);
+
+            if (angleToTarget > (fov / 2))
+                return false;
+
+            RaycastHit hit;
+            if (Physics.Raycast(enemyEyes.position, dirToTarget, out hit, lookDistance, detectionMask))
+            {
+                Debug.DrawLine(enemyEyes.position, hit.point, Color.green);
+
+                if (hit.transform == target)
+                {
+                    return true;
+                }
+            }
+        }
+    return false;
+
     }
 }
