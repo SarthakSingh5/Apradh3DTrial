@@ -13,7 +13,7 @@ public class NPCAttackState : NPCMovementBaseState
     public override void UpdateState(NPCMovementStateManager npcMovement)
     {
         npcMovement.npcWeaponManager.Fire();
-        if (!npcMovement.detectionManager.IsEnemyDetected())
+        if (!npcMovement.detectionManager.IsEnemyDetected(out Transform detectedTarget))
         {
             npcMovement.SwitchState(npcMovement.NPCPatrol);
         }

@@ -53,7 +53,7 @@ public class NPCWeaponManager : MonoBehaviour
     public void Fire()
     {
         fireRateTimer = 0;
-        barrelPos.LookAt(detectionManager.targets[0]);
+        barrelPos.LookAt(detectionManager.aimTarget);
 
         audioSource.PlayOneShot(gunShot);
 

@@ -11,6 +11,7 @@ public class NPCMovementStateManager : MonoBehaviour
     public DetectionStateManager detectionManager;
 
     public NPCWeaponManager npcWeaponManager;
+    public NPCSoundEmitter npcSoundEmitter;
 
     public NPCMovementBaseState currentState;
     public NPCPatrolState NPCPatrol = new NPCPatrolState();
@@ -24,6 +25,7 @@ public class NPCMovementStateManager : MonoBehaviour
         npcHealth = GetComponent<NPCHealth>();
         detectionManager = GetComponent<DetectionStateManager>();
         npcWeaponManager = GetComponentInChildren<NPCWeaponManager>();
+        npcSoundEmitter = GetComponent<NPCSoundEmitter>();
 
         SwitchState(NPCPatrol);
     }
