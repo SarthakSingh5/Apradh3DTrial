@@ -257,3 +257,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9979fa6568ba9db4486811751d79cac7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  timeToDestroy: 10
+  weapon: {fileID: 0}
+  dir: {x: 0, y: 0, z: 0}

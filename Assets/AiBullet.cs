@@ -2,10 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class NPCBullet : MonoBehaviour
+public class AiBullet : MonoBehaviour
 {
     [SerializeField] float timeToDestroy;
-    [HideInInspector] public NPCWeaponManager weapon;
+    [HideInInspector] public AiWeaponManager weapon;
     [HideInInspector] public Vector3 dir;
 
 
@@ -20,9 +20,9 @@ public class NPCBullet : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if(collision.gameObject.GetComponentInParent<NPCHealth>())
+        if(collision.gameObject.GetComponentInParent<AiHealth>())
         {
-            NPCHealth npcHealth = collision.gameObject.GetComponentInParent<NPCHealth>();
+            AiHealth npcHealth = collision.gameObject.GetComponentInParent<AiHealth>();
             npcHealth.TakeDamage(weapon.damage);
 
             if(npcHealth.health <= 0 && npcHealth.isDead == false)

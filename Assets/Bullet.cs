@@ -20,9 +20,9 @@ public class Bullet : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if(collision.gameObject.GetComponentInParent<NPCHealth>())
+        if(collision.gameObject.GetComponentInParent<AiHealth>())
         {
-            NPCHealth npcHealth = collision.gameObject.GetComponentInParent<NPCHealth>();
+            AiHealth npcHealth = collision.gameObject.GetComponentInParent<AiHealth>();
             npcHealth.TakeDamage(weapon.damage);
 
             if(npcHealth.health <= 0 && npcHealth.isDead == false)

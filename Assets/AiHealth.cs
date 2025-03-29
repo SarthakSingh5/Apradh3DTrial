@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class NPCHealth : MonoBehaviour
+public class AiHealth : MonoBehaviour
 {
     [SerializeField] public float health;
     RagdollManager ragdollManager;

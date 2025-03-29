@@ -5,7 +5,9 @@ using System.Collections.Generic;
 public enum AiStateId
 {
     ChasePlayer,
-    Idle
+    Idle,
+    FindTarget,
+    AttackTarget
 
 }
 
