@@ -221,4 +221,24 @@ public class AiSensor : MonoBehaviour
         return count;
     }
 
+    public int FilterCovers(Collider[] buffer, LayerMask layer)
+    {
+        int count = 0;
+
+        foreach (var col in colliders)
+        {
+            if (col != null && col.gameObject.layer == layer)
+            {
+                buffer[count++] = col;
+            }
+
+            if (buffer.Length == count)
+            {
+                break; // buffer is full
+            }
+        }
+
+        return count;
+    }
+
 }

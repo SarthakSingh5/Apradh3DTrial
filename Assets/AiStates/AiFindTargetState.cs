@@ -13,15 +13,11 @@ public class AiFindTargetState : AiState
     public void Update(AiAgent agent)
     {
         // Wander
-        if (!agent.navMeshAgent.hasPath)
-        {
-            WorldBounds worldBounds = GameObject.FindObjectOfType<WorldBounds>();
-            agent.navMeshAgent.destination = worldBounds.RandomPosition();
-        }
+        
 
         if (agent.targeting.HasTarget)
         {
-            agent.stateMachine.ChangeState(AiStateId.AttackTarget);
+            agent.stateMachine.ChangeState(AiStateId.TakeCover);
         }
     }
 

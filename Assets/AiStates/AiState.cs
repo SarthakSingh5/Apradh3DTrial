@@ -7,7 +7,8 @@ public enum AiStateId
     ChasePlayer,
     Idle,
     FindTarget,
-    AttackTarget
+    AttackTarget,
+    TakeCover
 
 }
 
