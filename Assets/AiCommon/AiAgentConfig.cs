@@ -11,6 +11,8 @@ public class AiAgentConfig : ScriptableObject
     public float maxSightDistance = 5.0f;
     public float findWeaponSpeed = 5.0f;
     public float findTargetSpeed = 5.0f;
+    public float walkSpeed = 3.5f;
+    public float runSpeed = 7.0f;
 
     [Header("Attack State")]
     public float attackSpeed = 3.0f;

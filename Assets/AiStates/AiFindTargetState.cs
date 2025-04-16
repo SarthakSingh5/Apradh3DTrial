@@ -13,11 +13,11 @@ public class AiFindTargetState : AiState
     public void Update(AiAgent agent)
     {
         // Wander
+        agent.navMeshAgent.SetDestination(agent.worldBounds.RandomPosition());
         
-
         if (agent.targeting.HasTarget)
         {
-            agent.stateMachine.ChangeState(AiStateId.TakeCover);
+            agent.stateMachine.ChangeState(AiStateId.EngageTarget);
         }
     }
 

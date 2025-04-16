@@ -2,25 +2,17 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public enum AiStateId
+public enum AiEngageSubStateId
 {
-    ChasePlayer,
-    Idle,
-    FindTarget,
-    AttackTarget,
-    TakeCover,
-    EngageTarget
-
+    Follow,
+    FlankLeft,
+    FlankRight
 }
 
-public interface AiState
+public interface AiEngageSubState
 {
-    AiStateId GetId();
     void Enter(AiAgent agent);
     void Update(AiAgent agent);
     void Exit(AiAgent agent);
-    
-    
-
-    
 }
+

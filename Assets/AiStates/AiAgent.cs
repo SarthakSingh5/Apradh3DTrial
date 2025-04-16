@@ -17,6 +17,7 @@ public class AiAgent : MonoBehaviour
     [HideInInspector] public Animator anim;
     [HideInInspector] public AiCoverMovement coverMovement;
     [HideInInspector] public AiSensor sensor;
+    [HideInInspector] public WorldBounds worldBounds;
     public Transform aimTarget;
     public Rig aimRig;
 
@@ -33,6 +34,7 @@ public class AiAgent : MonoBehaviour
         targeting = GetComponent<AiTargetingSystem>();
         weaponManager = GetComponentInChildren<AiWeaponManager>();
         coverMovement = GetComponent<AiCoverMovement>();
+        worldBounds = GetComponent<WorldBounds>();
         sensor = GetComponent<AiSensor>();
         anim = GetComponent<Animator>();
         stateMachine = new AiStateMachine(this);
@@ -41,6 +43,7 @@ public class AiAgent : MonoBehaviour
         stateMachine.RegisterState(new AiFindTargetState());
         stateMachine.RegisterState(new AiAttackTargetState());
         stateMachine.RegisterState(new AiTakeCoverState());
+        stateMachine.RegisterState(new AiEngageTargetState());
         stateMachine.ChangeState(initialState);
     }
 

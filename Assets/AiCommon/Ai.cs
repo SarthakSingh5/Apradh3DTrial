@@ -2,19 +2,20 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class AiLocomotion : MonoBehaviour
+public class Ai: MonoBehaviour
 {
+    public Vector3 velocity = Vector3.zero;
     
 
-    NavMeshAgent agent;
-    Animator animator;
+    public NavMeshAgent agent;
+    public Animator animator;
     
 
     // Start is called before the first frame update
-    void Start()
-    {
+    private void Awake(){
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
+        agent.updateRotation = false; // Disable automatic rotation
     }
 
     // Update is called once per frame
@@ -25,16 +26,12 @@ public class AiLocomotion : MonoBehaviour
         {
             transform.position = hit.point; // Snap NPC to ground
         }
+        
 
-        if (agent.hasPath)
-        {
-            animator.SetFloat("Speed", agent.velocity.magnitude);
-        }
-        else
-        {
-            animator.SetFloat("Speed", 0);
-        }
+
+        velocity = agent.velocity;
 
 
     }
+    
 }
