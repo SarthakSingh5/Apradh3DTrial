@@ -7,6 +7,7 @@ public class AiEngageSubStateMachine
     AiAgent agent;
     Dictionary<AiEngageSubStateId, AiEngageSubState> states;
     AiEngageSubState currentState;
+    AiCoverSubState coverState = new AiCoverSubState(); // Reference to the cover state
 
     float stateDuration = 3f; // Time before switching to another state (3 seconds)
     float timer;
@@ -21,24 +22,34 @@ public class AiEngageSubStateMachine
             { AiEngageSubStateId.Follow, new AiFollowSubState() },
             { AiEngageSubStateId.FlankLeft, new AiFlankSubState(false) },
             { AiEngageSubStateId.FlankRight, new AiFlankSubState(true) },
+            { AiEngageSubStateId.Cover, coverState}
         };
-
-        // Start with a random state
-        ChangeState(GetRandomState());
     }
 
     public void Update()
     {
-        // Call the Update method for the current state
-        currentState?.Update(agent);
-
-        // Timer logic: switch states after the specified duration
-        timer += Time.deltaTime;
-
-        if (timer >= stateDuration)
+        if (!agent.targeting.HasTarget)
         {
-            ChangeState(GetRandomState());
+            Stop();
+            return;
         }
+
+        if (agent.coverMovement.HasAnyCover(agent.targeting.Target.transform))
+        {
+            if (!(currentState is AiCoverSubState))
+                ChangeState(AiEngageSubStateId.Cover);
+        }
+        else
+        {
+            timer += Time.deltaTime;
+
+            if (timer >= stateDuration && !(currentState is AiCoverSubState))
+            {
+                ChangeState(GetRandomState());
+            }
+        }
+
+        currentState?.Update(agent);
     }
 
     public void ChangeState(AiEngageSubStateId newState)
@@ -47,7 +58,7 @@ public class AiEngageSubStateMachine
         currentState?.Exit(agent);
         currentState = states[newState];
         currentState.Enter(agent);
-        
+
         // Reset the timer for the next state
         timer = 0f;
     }

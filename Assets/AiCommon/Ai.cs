@@ -15,7 +15,6 @@ public class Ai: MonoBehaviour
     private void Awake(){
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
-        agent.updateRotation = false; // Disable automatic rotation
     }
 
     // Update is called once per frame

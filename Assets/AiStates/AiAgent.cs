@@ -12,6 +12,7 @@ public class AiAgent : MonoBehaviour
     public NavMeshAgent navMeshAgent;
     public AiAgentConfig config;
     public Transform playerTransform;
+    public AiEngageSubStateMachine engageStateMachine;
     [HideInInspector] public AiTargetingSystem targeting;
     [HideInInspector] public AiWeaponManager weaponManager;
     [HideInInspector] public Animator anim;
@@ -38,11 +39,11 @@ public class AiAgent : MonoBehaviour
         sensor = GetComponent<AiSensor>();
         anim = GetComponent<Animator>();
         stateMachine = new AiStateMachine(this);
+        engageStateMachine = new AiEngageSubStateMachine(this);
         stateMachine.RegisterState(new AiIdleState());
         stateMachine.RegisterState(new AiChasePlayerState());
         stateMachine.RegisterState(new AiFindTargetState());
         stateMachine.RegisterState(new AiAttackTargetState());
-        stateMachine.RegisterState(new AiTakeCoverState());
         stateMachine.RegisterState(new AiEngageTargetState());
         stateMachine.ChangeState(initialState);
     }

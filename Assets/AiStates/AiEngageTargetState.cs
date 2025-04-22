@@ -10,6 +10,7 @@ public class AiEngageTargetState : AiState
     {
         // Initialize the sub-state machine when entering the state
         subFSM = new AiEngageSubStateMachine(agent);
+        
     }
 
     public void Exit(AiAgent agent)
@@ -24,7 +25,6 @@ public class AiEngageTargetState : AiState
         if (!agent.targeting.HasTarget)
         {
             agent.stateMachine.ChangeState(AiStateId.FindTarget);
-            return;
         }
 
         // Update the sub-state machine (Follow, FlankLeft, FlankRight)

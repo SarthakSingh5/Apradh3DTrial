@@ -8,7 +8,6 @@ public enum AiStateId
     Idle,
     FindTarget,
     AttackTarget,
-    TakeCover,
     EngageTarget
 
 }

@@ -6,19 +6,23 @@ public class AiFollowSubState : AiEngageSubState
     public float minDistance = 4f;
     public virtual void Enter(AiAgent agent)
     {
+        agent.navMeshAgent.updateRotation = false; // Disable automatic rotation
         agent.navMeshAgent.isStopped = false;
     }
 
     public virtual void Update(AiAgent agent)
     {
+        Debug.Log("Follow Update");
+        if (!agent.targeting.HasTarget)
+        {
+           return; 
+        }
         GoToTarget(agent);
         UpdateRotation(agent, agent.targeting.TargetPosition);
     }
 
     public virtual void Exit(AiAgent agent)
     {
-        agent.navMeshAgent.speed = agent.config.walkSpeed;
-        agent.navMeshAgent.isStopped = true;
     }
 
     protected virtual void GoToTarget(AiAgent agent)
@@ -39,12 +43,6 @@ public class AiFollowSubState : AiEngageSubState
         if (distance <= minDistance)
         {
             GetAwayFrom(agent, agent.targeting.TargetPosition);
-        }
-
-        if (!agent.targeting.TargetInSight)
-        {
-            agent.navMeshAgent.isStopped = false;
-            agent.navMeshAgent.SetDestination(agent.targeting.TargetPosition);
         }
 
         if (!agent.targeting.TargetInSight)

@@ -14,4 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxTime: 1
   maxDistance: 1
+  dieForce: 10
   maxSightDistance: 5
+  findWeaponSpeed: 5
+  findTargetSpeed: 5
+  walkSpeed: 3.5
+  runSpeed: 5
+  attackSpeed: 3
+  attackStoppingDistance: 5
+  attackCloseRange: 7

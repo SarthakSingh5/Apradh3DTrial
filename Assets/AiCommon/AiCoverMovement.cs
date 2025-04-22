@@ -20,6 +20,10 @@ public class AiCoverMovement : MonoBehaviour
 
     [Range(0, 1f)]
     public float Updatefrequency = 0.5f; // seconds
+    [Range(5f, 50f)]
+    public float MaxTargetDistance = 15f; // if target moves beyond this, stop hiding
+
+    public System.Action OnCoverBreak;
 
     private Coroutine MovementCoroutine;
     private Collider[] Colliders = new Collider[10]; // more is less performant, but more options
@@ -27,26 +31,45 @@ public class AiCoverMovement : MonoBehaviour
     private void Awake()
     {
         Agent = GetComponent<NavMeshAgent>();
-        LineOfSightChecker.OnGainSight += HandleGainSight;
-        LineOfSightChecker.OnLoseSight += HandleLoseSight;
     }
 
-    private void HandleGainSight(Transform Target)
+    public void StartHiding(Transform target)
     {
         if (MovementCoroutine != null)
         {
             StopCoroutine(MovementCoroutine);
         }
-        MovementCoroutine = StartCoroutine(Hide(Target));
+        MovementCoroutine = StartCoroutine(Hide(target));
     }
 
-    private void HandleLoseSight(Transform Target)
+
+    public void StopHiding()
     {
         if (MovementCoroutine != null)
         {
             StopCoroutine(MovementCoroutine);
+            MovementCoroutine = null;
         }
     }
+
+    public bool HasAnyCover(Transform target)
+    {
+        int hits = Physics.OverlapSphereNonAlloc(Agent.transform.position, LineOfSightChecker.Collider.radius, Colliders, HidableLayers);
+
+        int validHits = 0;
+
+        for (int i = 0; i < hits; i++)
+        {
+            if (Vector3.Distance(Colliders[i].transform.position, target.position) >= MinPlayerDistance &&
+                Colliders[i].bounds.size.y >= MinObstacleHeight)
+            {
+                validHits++;
+            }
+        }
+
+        return validHits > 0;
+    }
+
 
     private IEnumerator Hide(Transform Target)
     {
@@ -112,6 +135,16 @@ public class AiCoverMovement : MonoBehaviour
                     Debug.LogError($"Unable to find NavMesh near object (Colliders[{i}].name) at {Colliders[i].transform.position}");
                 }
             }
+            
+            // Rotate agent to face the target each frame
+            Vector3 direction = Target.position - Agent.transform.position;
+            direction.y = 0;
+            if (direction.sqrMagnitude > 0.01f)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(direction);
+                Agent.transform.rotation = Quaternion.Slerp(Agent.transform.rotation, targetRotation, Time.deltaTime * 10f);
+            }
+
             yield return Wait;
 
 
@@ -137,5 +170,7 @@ public class AiCoverMovement : MonoBehaviour
             return Vector3.Distance(Agent.transform.position, A.transform.position).CompareTo(Vector3.Distance(Agent.transform.position, B.transform.position));
         }
     }
+
+
 
 }
