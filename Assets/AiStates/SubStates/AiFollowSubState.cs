@@ -6,19 +6,16 @@ public class AiFollowSubState : AiEngageSubState
     public float minDistance = 4f;
     public virtual void Enter(AiAgent agent)
     {
-        agent.navMeshAgent.updateRotation = false; // Disable automatic rotation
         agent.navMeshAgent.isStopped = false;
     }
 
     public virtual void Update(AiAgent agent)
     {
-        Debug.Log("Follow Update");
         if (!agent.targeting.HasTarget)
         {
            return; 
         }
         GoToTarget(agent);
-        UpdateRotation(agent, agent.targeting.TargetPosition);
     }
 
     public virtual void Exit(AiAgent agent)

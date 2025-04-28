@@ -2,10 +2,10 @@ using UnityEngine;
 
 public class AiComponent : MonoBehaviour
 {
-    protected Ai ai;
+    protected AiAgent agent;
 
     private void Awake()
     {
-        ai = GetComponentInParent<Ai>();
+        agent = GetComponentInParent<AiAgent>();
     }
 }

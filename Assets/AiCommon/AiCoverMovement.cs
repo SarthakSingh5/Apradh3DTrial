@@ -134,19 +134,8 @@ public class AiCoverMovement : MonoBehaviour
                 {
                     Debug.LogError($"Unable to find NavMesh near object (Colliders[{i}].name) at {Colliders[i].transform.position}");
                 }
-            }
-            
-            // Rotate agent to face the target each frame
-            Vector3 direction = Target.position - Agent.transform.position;
-            direction.y = 0;
-            if (direction.sqrMagnitude > 0.01f)
-            {
-                Quaternion targetRotation = Quaternion.LookRotation(direction);
-                Agent.transform.rotation = Quaternion.Slerp(Agent.transform.rotation, targetRotation, Time.deltaTime * 10f);
-            }
-
-            yield return Wait;
-
+            } 
+            yield return Wait;         
 
         }
     }

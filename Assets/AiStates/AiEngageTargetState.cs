@@ -8,6 +8,7 @@ public class AiEngageTargetState : AiState
 
     public void Enter(AiAgent agent)
     {
+        agent.SetAim(true);
         // Initialize the sub-state machine when entering the state
         subFSM = new AiEngageSubStateMachine(agent);
         
