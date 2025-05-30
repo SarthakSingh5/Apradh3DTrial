@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
+using System.Collections.Generic;
 
 public class AiCoverMovement : MonoBehaviour
 {
@@ -13,46 +14,61 @@ public class AiCoverMovement : MonoBehaviour
     public float HideSensitivity = 0;
 
     [Range(1, 10)]
-    public float MinPlayerDistance = 5f;
+    public float MinTargetDistance = 5f;
 
     [Range(0, 5f)]
     public float MinObstacleHeight = 1.25f;
 
-    [Range(0, 1f)]
-    public float Updatefrequency = 0.5f; // seconds
+    [Range(0, 5f)]
+    public float Updatefrequency = 5f; // seconds
     [Range(5f, 50f)]
     public float MaxTargetDistance = 15f; // if target moves beyond this, stop hiding
 
     public System.Action OnCoverBreak;
 
-    private Coroutine MovementCoroutine;
+    private Coroutine peekCoroutine = null;
+    private Coroutine movementCoroutine = null;
     private Collider[] Colliders = new Collider[10]; // more is less performant, but more options
+
+    [Header("Peeking Settings")]
+    public float PeekOffsetDistance = 1f;
+    public float TimeBetweenPeeks = 3f;
+    public float PeekDuration = 1f;
+
+    private Vector3 lastHidePosition;
+    private bool isPeeking = false;
+    private bool peekStarted;
+
 
     private void Awake()
     {
         Agent = GetComponent<NavMeshAgent>();
     }
 
-    public void StartHiding(Transform target)
+    public void StartHiding(AiAgent agent)
     {
-        if (MovementCoroutine != null)
-        {
-            StopCoroutine(MovementCoroutine);
-        }
-        MovementCoroutine = StartCoroutine(Hide(target));
+        StopHiding();
+        movementCoroutine = StartCoroutine(Hide(agent));
+        peekCoroutine=StartCoroutine(PeekAtTargetRoutine(agent));
     }
 
 
     public void StopHiding()
     {
-        if (MovementCoroutine != null)
+        if (movementCoroutine != null)
         {
-            StopCoroutine(MovementCoroutine);
-            MovementCoroutine = null;
+            StopCoroutine(movementCoroutine);
+            movementCoroutine = null;
+        }
+        if (peekCoroutine != null)
+        {
+            StopCoroutine(peekCoroutine);
+            peekCoroutine = null;
+            peekStarted = false;
         }
     }
 
-    public bool HasAnyCover(Transform target)
+    public bool HasAnyCover(Vector3 TargetPosition)
     {
         int hits = Physics.OverlapSphereNonAlloc(Agent.transform.position, LineOfSightChecker.Collider.radius, Colliders, HidableLayers);
 
@@ -60,7 +76,7 @@ public class AiCoverMovement : MonoBehaviour
 
         for (int i = 0; i < hits; i++)
         {
-            if (Vector3.Distance(Colliders[i].transform.position, target.position) >= MinPlayerDistance &&
+            if (Vector3.Distance(Colliders[i].transform.position, TargetPosition) >= MinTargetDistance &&
                 Colliders[i].bounds.size.y >= MinObstacleHeight)
             {
                 validHits++;
@@ -71,12 +87,18 @@ public class AiCoverMovement : MonoBehaviour
     }
 
 
-    private IEnumerator Hide(Transform Target)
+    private IEnumerator Hide(AiAgent agent)
     {
+        if (peekCoroutine != null)
+        {
+            StopCoroutine(peekCoroutine);
+            peekCoroutine = null;
+        }
         WaitForSeconds Wait = new WaitForSeconds(Updatefrequency);
 
         while (true)
         {
+            Vector3 TargetPosition = agent.targeting.TargetPosition;
             for (int i = 0; i < Colliders.Length; i++)
             {
                 Colliders[i] = null;
@@ -87,7 +109,7 @@ public class AiCoverMovement : MonoBehaviour
             int hitReduction = 0;
             for (int i = 0; i < hits; i++)
             {
-                if (Vector3.Distance(Colliders[i].transform.position, Target.position) < MinPlayerDistance || Colliders[i].bounds.size.y < MinObstacleHeight)
+                if (Vector3.Distance(Colliders[i].transform.position, TargetPosition) < MinTargetDistance || Colliders[i].bounds.size.y < MinObstacleHeight)
                 {
                     Colliders[i] = null;
                     hitReduction++;
@@ -100,42 +122,88 @@ public class AiCoverMovement : MonoBehaviour
 
             for (int i = 0; i < hits; i++)
             {
-                if (NavMesh.SamplePosition(Colliders[i].transform.position, out NavMeshHit hit, 20f, Agent.areaMask))
+                if (Colliders[i].bounds.size.y >= 3)
                 {
-                    if (!NavMesh.FindClosestEdge(hit.position, out hit, Agent.areaMask))
-                    {
-                        Debug.LogError($"Unable to find edge close to (hit.position)");
-                    }
+                    List<Vector3> candidatePoints = GenerateCoverPoints(Colliders[i]);
 
-                    if (Vector3.Dot(hit.normal, (Target.position - hit.position).normalized) < HideSensitivity)
+                    foreach (var point in candidatePoints)
                     {
-                        Agent.SetDestination(hit.position);
-                        break;
-                    }
-                    else
-                    {
-                        // Since previous spot wasn't facing "away" from the player, we'll try the other side of the object
-                        if (NavMesh.SamplePosition(Colliders[i].transform.position - (Target.position - hit.position).normalized * 2, out NavMeshHit hit2, 20f, Agent.areaMask))
+                        if (NavMesh.SamplePosition(point, out NavMeshHit hit, 5f, Agent.areaMask))
                         {
-                            if (!NavMesh.FindClosestEdge(hit2.position, out hit2, Agent.areaMask))
+                            if (!NavMesh.FindClosestEdge(hit.position, out hit, Agent.areaMask))
                             {
-                                Debug.LogError($"Unable to find edge close to (hit2.position) (second attempt)");
+                                Debug.LogError($"Unable to find edge close to (hit.position)");
                             }
 
-                            if (Vector3.Dot(hit2.normal, (Target.position - hit2.position).normalized) < HideSensitivity)
+                            if (Vector3.Dot(hit.normal, (TargetPosition - hit.position).normalized) < HideSensitivity)
                             {
-                                Agent.SetDestination(hit2.position);
+                                
+                                agent.inCover = false;
+                                lastHidePosition = hit.position;
+
+
+
+                                Agent.SetDestination(lastHidePosition);
+
+                                yield return new WaitUntil(() =>!Agent.pathPending && Agent.remainingDistance < 0.2f);
+
+                                agent.SetAim(false);
+                                agent.inCover = true;
+                                Vector3 pos = agent.transform.position;
+                                pos += hit.normal * 1000.0f;
+                                pos += Vector3.up * 1.5f;
+                                agent.LookAt(pos);
+                                
                                 break;
+
                             }
+                        }
+                        else
+                        {
+                            Debug.LogError($"Unable to find NavMesh near object (Colliders[{i}].name) at {Colliders[i].transform.position}");
                         }
                     }
                 }
                 else
                 {
-                    Debug.LogError($"Unable to find NavMesh near object (Colliders[{i}].name) at {Colliders[i].transform.position}");
+                    if (NavMesh.SamplePosition(Colliders[i].transform.position, out NavMeshHit hit1, 20f, Agent.areaMask))
+                    {
+                        if (!NavMesh.FindClosestEdge(hit1.position, out hit1, Agent.areaMask))
+                        {
+                            Debug.LogError($"Unable to find edge close to {hit1.position}");
+                        }
+
+                        if (Vector3.Dot(hit1.normal, (TargetPosition - hit1.position).normalized) < HideSensitivity)
+                        {
+                            Agent.SetDestination(hit1.position);
+                            break;
+                        }
+                        else
+                        {
+                            if (NavMesh.SamplePosition(Colliders[i].transform.position - (TargetPosition - hit1.position).normalized * 2, out NavMeshHit hit2, 20f, Agent.areaMask))
+                            {
+                                if (!NavMesh.FindClosestEdge(hit2.position, out hit2, Agent.areaMask))
+                                {
+                                    Debug.LogError($"Unable to find edge close to {hit2.position} (second attempt)");
+                                }
+
+                                if (Vector3.Dot(hit2.normal, (TargetPosition - hit2.position).normalized) < HideSensitivity)
+                                {
+                                    Agent.SetDestination(hit2.position);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogError($"Unable to find NavMesh near object {Colliders[i].name} at {Colliders[i].transform.position}");
+                    }
+
                 }
-            } 
-            yield return Wait;         
+
+            }
+            yield return Wait;
 
         }
     }
@@ -160,6 +228,69 @@ public class AiCoverMovement : MonoBehaviour
         }
     }
 
+    List<Vector3> GenerateCoverPoints(Collider collider)
+    {
+        List<Vector3> points = new List<Vector3>();
+        Bounds bounds = collider.bounds;
+        Vector3 center = bounds.center;
+        Vector3 extents = bounds.extents;
 
+        float inset = 0.2f; // distance to move inward from the actual corner
+
+        // X and Z directions
+        float x = extents.x;
+        float z = extents.z;
+
+        // 8 face-near-corner points (slightly inward from corners)
+        points.Add(center + new Vector3(-x + inset, 0, z)); // front-left (inward on x)
+        points.Add(center + new Vector3(-x, 0, z - inset)); // front-left (inward on z)
+
+        points.Add(center + new Vector3(x - inset, 0, z)); // front-right
+        points.Add(center + new Vector3(x, 0, z - inset)); // front-right
+
+        points.Add(center + new Vector3(-x + inset, 0, -z)); // back-left
+        points.Add(center + new Vector3(-x, 0, -z + inset)); // back-left
+
+        points.Add(center + new Vector3(x - inset, 0, -z)); // back-right
+        points.Add(center + new Vector3(x, 0, -z + inset)); // back-right
+
+        return points;
+    }
+
+
+    private IEnumerator PeekAtTargetRoutine(AiAgent agent)
+    {
+        WaitForSeconds waitBetweenPeeks = new WaitForSeconds(TimeBetweenPeeks);
+        WaitForSeconds peekDuration = new WaitForSeconds(PeekDuration);
+
+        while (true)
+        {
+
+            Vector3 TargetPosition=agent.targeting.TargetPosition;
+
+            if (Agent.pathPending || Vector3.Distance(transform.position, lastHidePosition) > 0.5f)
+            {
+                yield return null;
+                continue;
+            }
+                
+
+            isPeeking = true;
+
+            Vector3 directionToTarget = (TargetPosition - lastHidePosition).normalized;
+            Vector3 peekPosition = lastHidePosition + directionToTarget * PeekOffsetDistance;
+
+            if (NavMesh.SamplePosition(peekPosition, out NavMeshHit peekHit, 2f, Agent.areaMask))
+            {
+                Agent.SetDestination(peekHit.position);
+                yield return new WaitUntil(() => !Agent.pathPending && Agent.remainingDistance < 0.2f);
+                yield return peekDuration;
+                Agent.SetDestination(lastHidePosition);
+            }
+            yield return waitBetweenPeeks;
+            
+            isPeeking = false;
+        }
+    }
 
 }

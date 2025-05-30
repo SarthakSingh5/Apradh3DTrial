@@ -4,7 +4,7 @@ public class AiCoverSubState : AiEngageSubState
     public void Enter(AiAgent agent)
     {
         agent.navMeshAgent.updateRotation = false; // Disable automatic rotation
-        agent.coverMovement.StartHiding(agent.targeting.Target.transform);
+        agent.coverMovement.StartHiding(agent);
     }
 
     public void Update(AiAgent agent) { }

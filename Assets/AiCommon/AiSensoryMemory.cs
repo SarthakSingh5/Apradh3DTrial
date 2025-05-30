@@ -10,7 +10,7 @@ public class AiMemory
         }
     }
     public GameObject gameObject;
-    public Vector3 position;
+    public Vector3 lastKnownPosition;
     public Vector3 direction;
     public float distance;
     public float angle;
@@ -43,7 +43,7 @@ public class AiSensoryMemory
     {
         AiMemory memory = FetchMemory(target);
         memory.gameObject = target;
-        memory.position = target.transform.position;
+        memory.lastKnownPosition = target.transform.position;
         memory.direction = target.transform.position - agent.transform.position;
         memory.distance = memory.direction.magnitude;
         memory.angle = Vector3.Angle(agent.transform.forward, memory.direction);

@@ -34,7 +34,7 @@ public class AiEngageSubStateMachine
             return;
         }
 
-        if (agent.coverMovement.HasAnyCover(agent.targeting.Target.transform))
+        if (agent.coverMovement.HasAnyCover(agent.targeting.TargetPosition))
         {
             if (!(currentState is AiCoverSubState))
                 ChangeState(AiEngageSubStateId.Cover);

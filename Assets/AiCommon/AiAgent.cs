@@ -34,6 +34,7 @@ public class AiAgent : MonoBehaviour
 
 
     private bool aiming = false;
+    public bool inCover = false;
     public void SetAim(bool aim)
     {
         if (carryingGun)

@@ -22,7 +22,7 @@ public class AiTargetingSystem : MonoBehaviour
 
     public Vector3 TargetPosition
     {
-        get { return bestMemory.gameObject.transform.position; }
+        get { return bestMemory.lastKnownPosition; }
     }
 
     public bool TargetInSight
@@ -103,7 +103,7 @@ public class AiTargetingSystem : MonoBehaviour
             }
             color.a = memory.score / maxScore;
             Gizmos.color = color;
-            Gizmos.DrawSphere(memory.position, 0.2f);
+            Gizmos.DrawSphere(memory.lastKnownPosition, 0.2f);
         }
     }
 
