@@ -17,12 +17,13 @@ public class AiFlankSubState : AiFollowSubState
         angle *= flankRight ? 1f : -1f;
         direction = Quaternion.Euler(0f, angle, 0f) * direction;
         Vector3 destination = agent.targeting.TargetPosition + direction * (maxDistance + minDistance) * 0.5f;
-        agent.navMeshAgent.isStopped = false;
+        agent.canMove = true;
         agent.navMeshAgent.SetDestination(destination);
     }
 
     protected override void GoToTarget(AiAgent agent)
     {
+        Debug.Log("Flanking target: " + agent.targeting.TargetPosition);
         float distance = agent.targeting.TargetDistance;
         UpdateSpeed(agent,distance);
 
@@ -32,7 +33,7 @@ public class AiFlankSubState : AiFollowSubState
         }
         else if (distance > maxDistance)
         {
-            agent.navMeshAgent.isStopped = false;
+            agent.canMove = true;
             agent.navMeshAgent.SetDestination(agent.targeting.TargetPosition);
         }
         else if (distance < minDistance)
@@ -42,7 +43,7 @@ public class AiFlankSubState : AiFollowSubState
 
         if (!agent.targeting.TargetInSight)
         {
-            agent.navMeshAgent.isStopped = false;
+            agent.canMove = true;
             agent.navMeshAgent.SetDestination(agent.targeting.TargetPosition);
         }
     }

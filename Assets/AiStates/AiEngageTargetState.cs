@@ -27,6 +27,11 @@ public class AiEngageTargetState : AiState
         {
             agent.stateMachine.ChangeState(AiStateId.FindTarget);
         }
+        else if(agent.targeting.TargetInSight && agent.coverMovement.HasAnyCover(agent.targeting.TargetPosition))
+        {
+            // If the target is in sight, change to Cover state
+            agent.stateMachine.ChangeState(AiStateId.Cover);
+        }
 
         // Update the sub-state machine (Follow, FlankLeft, FlankRight)
         subFSM.Update();

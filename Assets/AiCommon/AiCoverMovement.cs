@@ -24,8 +24,6 @@ public class AiCoverMovement : MonoBehaviour
     [Range(5f, 50f)]
     public float MaxTargetDistance = 15f; // if target moves beyond this, stop hiding
 
-    public System.Action OnCoverBreak;
-
     private Coroutine peekCoroutine = null;
     private Coroutine movementCoroutine = null;
     private Collider[] Colliders = new Collider[10]; // more is less performant, but more options
@@ -36,8 +34,8 @@ public class AiCoverMovement : MonoBehaviour
     public float PeekDuration = 1f;
 
     private Vector3 lastHidePosition;
-    private bool isPeeking = false;
-    private bool peekStarted;
+    public bool isPeeking = false;
+
 
 
     private void Awake()
@@ -47,13 +45,14 @@ public class AiCoverMovement : MonoBehaviour
 
     public void StartHiding(AiAgent agent)
     {
-        StopHiding();
+        StopHiding(agent);
         movementCoroutine = StartCoroutine(Hide(agent));
-        peekCoroutine=StartCoroutine(PeekAtTargetRoutine(agent));
+        peekCoroutine = StartCoroutine(PeekAtTargetRoutine(agent));
+
     }
 
 
-    public void StopHiding()
+    public void StopHiding(AiAgent agent)
     {
         if (movementCoroutine != null)
         {
@@ -64,8 +63,10 @@ public class AiCoverMovement : MonoBehaviour
         {
             StopCoroutine(peekCoroutine);
             peekCoroutine = null;
-            peekStarted = false;
         }
+        isPeeking = false;
+        agent.inCover = false;
+        
     }
 
     public bool HasAnyCover(Vector3 TargetPosition)
@@ -89,12 +90,14 @@ public class AiCoverMovement : MonoBehaviour
 
     private IEnumerator Hide(AiAgent agent)
     {
+        Debug.Log("Starting Hide Routine");
         if (peekCoroutine != null)
         {
             StopCoroutine(peekCoroutine);
             peekCoroutine = null;
         }
         WaitForSeconds Wait = new WaitForSeconds(Updatefrequency);
+
 
         while (true)
         {
@@ -134,10 +137,16 @@ public class AiCoverMovement : MonoBehaviour
                             {
                                 Debug.LogError($"Unable to find edge close to (hit.position)");
                             }
+                            // Vector3 rotated = Quaternion.Euler(0, -90, 0) * hit.normal;
+                            // Vector3 a = hit.normal.normalized;
+                            // Vector3 b = (TargetPosition - hit.position).normalized;
 
+                            // float sinTheta = Vector3.Cross(a, b).magnitude;
+                            // float cosTheta = Vector3.Dot(a, b);
+                            // float tanTheta = sinTheta / cosTheta;
                             if (Vector3.Dot(hit.normal, (TargetPosition - hit.position).normalized) < HideSensitivity)
                             {
-                                
+
                                 agent.inCover = false;
                                 lastHidePosition = hit.position;
 
@@ -145,7 +154,7 @@ public class AiCoverMovement : MonoBehaviour
 
                                 Agent.SetDestination(lastHidePosition);
 
-                                yield return new WaitUntil(() =>!Agent.pathPending && Agent.remainingDistance < 0.2f);
+                                yield return new WaitUntil(() => !Agent.pathPending && Agent.remainingDistance < 0.2f);
 
                                 agent.SetAim(false);
                                 agent.inCover = true;
@@ -153,7 +162,7 @@ public class AiCoverMovement : MonoBehaviour
                                 pos += hit.normal * 1000.0f;
                                 pos += Vector3.up * 1.5f;
                                 agent.LookAt(pos);
-                                
+
                                 break;
 
                             }
@@ -265,17 +274,23 @@ public class AiCoverMovement : MonoBehaviour
 
         while (true)
         {
+            Vector3 TargetPosition = agent.targeting.TargetPosition;
 
-            Vector3 TargetPosition=agent.targeting.TargetPosition;
-
+            // Wait until agent is in cover and not moving
             if (Agent.pathPending || Vector3.Distance(transform.position, lastHidePosition) > 0.5f)
             {
                 yield return null;
                 continue;
             }
-                
 
-            isPeeking = true;
+            // Ensure no peeking if state is about to change
+            if (!agent.inCover)
+            {
+                yield return null;
+                continue;
+            }
+
+            Debug.Log("Starting Peek Routine");
 
             Vector3 directionToTarget = (TargetPosition - lastHidePosition).normalized;
             Vector3 peekPosition = lastHidePosition + directionToTarget * PeekOffsetDistance;
@@ -283,13 +298,25 @@ public class AiCoverMovement : MonoBehaviour
             if (NavMesh.SamplePosition(peekPosition, out NavMeshHit peekHit, 2f, Agent.areaMask))
             {
                 Agent.SetDestination(peekHit.position);
-                yield return new WaitUntil(() => !Agent.pathPending && Agent.remainingDistance < 0.2f);
+                yield return new WaitUntil(() => !Agent.pathPending && Agent.remainingDistance <= 0.2f);
+                Debug.Log($"Peeking at target from {peekHit.position}");
+                isPeeking = true;
+
+                // Ensure agent stays at peek position for the full duration
                 yield return peekDuration;
+                isPeeking = false;
+
+                // Return to cover position
                 Agent.SetDestination(lastHidePosition);
+                yield return new WaitUntil(() => !Agent.pathPending && Agent.remainingDistance <= 0.2f);
             }
+            else
+            {
+                Debug.LogWarning($"No valid NavMesh position for peek at {peekPosition}");
+            }
+
+            // Wait before next peek
             yield return waitBetweenPeeks;
-            
-            isPeeking = false;
         }
     }
 

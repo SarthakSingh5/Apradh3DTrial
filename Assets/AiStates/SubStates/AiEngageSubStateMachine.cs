@@ -7,46 +7,37 @@ public class AiEngageSubStateMachine
     AiAgent agent;
     Dictionary<AiEngageSubStateId, AiEngageSubState> states;
     AiEngageSubState currentState;
-    AiCoverSubState coverState = new AiCoverSubState(); // Reference to the cover state
 
-    float stateDuration = 3f; // Time before switching to another state (3 seconds)
+    float stateDuration = 3f;
     float timer;
+    bool isStopped; // Track if the sub-state machine is stopped
 
     public AiEngageSubStateMachine(AiAgent agent)
     {
         this.agent = agent;
-
-        // Register the sub-states in the dictionary
         states = new Dictionary<AiEngageSubStateId, AiEngageSubState>
         {
             { AiEngageSubStateId.Follow, new AiFollowSubState() },
             { AiEngageSubStateId.FlankLeft, new AiFlankSubState(false) },
             { AiEngageSubStateId.FlankRight, new AiFlankSubState(true) },
-            { AiEngageSubStateId.Cover, coverState}
         };
+        isStopped = false;
+        ChangeState(AiEngageSubStateId.Follow); // Start in Follow state
     }
 
     public void Update()
     {
-        if (!agent.targeting.HasTarget)
+        if (isStopped || !agent.targeting.HasTarget)
         {
             Stop();
             return;
         }
 
-        if (agent.coverMovement.HasAnyCover(agent.targeting.TargetPosition))
-        {
-            if (!(currentState is AiCoverSubState))
-                ChangeState(AiEngageSubStateId.Cover);
-        }
-        else
-        {
-            timer += Time.deltaTime;
+        timer += Time.deltaTime;
 
-            if (timer >= stateDuration && !(currentState is AiCoverSubState))
-            {
-                ChangeState(GetRandomState());
-            }
+        if (timer >= stateDuration)
+        {
+            ChangeState(GetRandomState());
         }
 
         currentState?.Update(agent);
@@ -54,32 +45,31 @@ public class AiEngageSubStateMachine
 
     public void ChangeState(AiEngageSubStateId newState)
     {
-        // Exit the current state and enter the new one
         currentState?.Exit(agent);
         currentState = states[newState];
         currentState.Enter(agent);
-
-        // Reset the timer for the next state
         timer = 0f;
     }
 
     AiEngageSubStateId GetRandomState()
     {
-        // Choose a random sub-state (Follow, FlankLeft, or FlankRight)
         AiEngageSubStateId[] choices = new AiEngageSubStateId[]
         {
             AiEngageSubStateId.Follow,
             AiEngageSubStateId.FlankLeft,
             AiEngageSubStateId.FlankRight
         };
-
         return choices[Random.Range(0, choices.Length)];
     }
 
     public void Stop()
     {
-        // Clean up when stopping the state machine
-        currentState?.Exit(agent);
+        if (!isStopped && currentState != null)
+        {
+            currentState.Exit(agent);
+            Debug.Log("Stopping SubState: " + currentState + " at " + Time.time);
+            currentState = null;
+            isStopped = true;
+        }
     }
 }
-

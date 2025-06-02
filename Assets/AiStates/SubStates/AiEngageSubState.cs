@@ -6,8 +6,7 @@ public enum AiEngageSubStateId
 {
     Follow,
     FlankLeft,
-    FlankRight,
-    Cover
+    FlankRight
 }
 
 public interface AiEngageSubState

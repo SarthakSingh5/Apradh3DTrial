@@ -24,6 +24,7 @@ public class AiAgent : MonoBehaviour
 
     public Vector3 velocity = Vector3.zero;
     public bool canTurn = true;
+    public bool canMove = false;
 
     public UnityAction<Vector3> LookAt;
     public System.Func<Vector3, bool> IsLookingAt;
@@ -63,10 +64,10 @@ public class AiAgent : MonoBehaviour
 
 
 
-
     // Start is called before the first frame update
     void Start()
     {
+        playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
         navMeshAgent = GetComponent<NavMeshAgent>();
         targeting = GetComponent<AiTargetingSystem>();
         weaponManager = GetComponentInChildren<AiWeaponManager>();
@@ -77,10 +78,10 @@ public class AiAgent : MonoBehaviour
         gun = GetComponentInChildren<Gun>();
         stateMachine = new AiStateMachine(this);
         stateMachine.RegisterState(new AiIdleState());
-        stateMachine.RegisterState(new AiChasePlayerState());
         stateMachine.RegisterState(new AiFindTargetState());
         stateMachine.RegisterState(new AiAttackTargetState());
         stateMachine.RegisterState(new AiEngageTargetState());
+        stateMachine.RegisterState(new AiCoverState());
         stateMachine.ChangeState(initialState);
     }
 
@@ -96,5 +97,6 @@ public class AiAgent : MonoBehaviour
 
         velocity = navMeshAgent.velocity;
         navMeshAgent.updateRotation = canTurn; // Enable or disable rotation based on canTurn
+        navMeshAgent.isStopped = !canMove; // Enable or disable movement based on canMove
     }
 }

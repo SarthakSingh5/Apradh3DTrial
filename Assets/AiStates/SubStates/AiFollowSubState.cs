@@ -6,15 +6,11 @@ public class AiFollowSubState : AiEngageSubState
     public float minDistance = 4f;
     public virtual void Enter(AiAgent agent)
     {
-        agent.navMeshAgent.isStopped = false;
+        agent.canMove = true;
     }
 
     public virtual void Update(AiAgent agent)
     {
-        if (!agent.targeting.HasTarget)
-        {
-           return; 
-        }
         GoToTarget(agent);
     }
 
@@ -24,16 +20,17 @@ public class AiFollowSubState : AiEngageSubState
 
     protected virtual void GoToTarget(AiAgent agent)
     {
+        Debug.Log("Following target: " + agent.targeting.TargetPosition);
         float distance = agent.targeting.TargetDistance;
         UpdateSpeed(agent, distance);
 
         if (distance <= maxDistance)
         {
-            agent.navMeshAgent.isStopped = true;
+            agent.canMove = false;
         }
         else
         {
-            agent.navMeshAgent.isStopped = false;
+            agent.canMove = true;
             agent.navMeshAgent.SetDestination(agent.targeting.TargetPosition);
         }
 
@@ -44,7 +41,7 @@ public class AiFollowSubState : AiEngageSubState
 
         if (!agent.targeting.TargetInSight)
         {
-            agent.navMeshAgent.isStopped = false;
+            agent.canMove = true;
             agent.navMeshAgent.SetDestination(agent.targeting.TargetPosition);
         }
     }
@@ -64,7 +61,7 @@ public class AiFollowSubState : AiEngageSubState
         if (NavMesh.SamplePosition(targetPosition, out NavMeshHit hit, 4f, NavMesh.AllAreas))
         {
             targetPosition = hit.position;
-            agent.navMeshAgent.isStopped = false;
+            agent.canMove = true;
             agent.navMeshAgent.SetDestination(targetPosition);
         }
     }

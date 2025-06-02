@@ -27,7 +27,7 @@ public class AiTargetingSystem : MonoBehaviour
 
     public bool TargetInSight
     {
-        get { return bestMemory.Age < 0.5f; } // seconds
+        get { return bestMemory.Age < 1.0f; } // seconds
     }
 
     public float TargetDistance
