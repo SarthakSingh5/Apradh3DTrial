@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
 
-public class AiLook : AiComponent
+public class AiLook : NpcComponent
 {
     [SerializeField] public float turnSpeed = 15f;
     [SerializeField] float expireTime = 0.2f;
@@ -28,14 +28,15 @@ public class AiLook : AiComponent
 
     public void Start()
     {
-        agent.LookAt += OnLookAt;
-        agent.IsLookingAt += OnIsLookingAt;
+        npc.LookAt += OnLookAt;
+        npc.IsLookingAt += OnIsLookingAt;
+        npc.LookForward += NPCLookForward;
     }
 
     #region Rig Manipulation Methods
     void UpdateArmRigs()
     {
-        if (agent.Aiming && agent.carryingGun)
+        if (npc.Aiming && npc.carryingGun)
         {
             RArmRig.weight = 1f;
             LArmRig.weight = 1f;
@@ -68,7 +69,7 @@ public class AiLook : AiComponent
         AimTarget.position = position;
         ClampAimTargetAngle();
 
-        if (agent.Aiming && agent.carryingGun)
+        if (npc.Aiming && npc.carryingGun)
         {
             SetSpineAimTargetPosition(transform.TransformPoint(Quaternion.Euler(0f, 45f, 0f) * AimTarget.localPosition));
         }
@@ -81,8 +82,8 @@ public class AiLook : AiComponent
     void ClampAimTargetAngle()
     {
         float HorizontalAngleLimit = 15f;
-        Vector3 forward = agent.transform.forward;
-        Vector3 direction = (AimTarget.position - agent.SensorPosition).normalized;
+        Vector3 forward = npc.transform.forward;
+        Vector3 direction = (AimTarget.position - npc.SensorPosition).normalized;
         Vector3 horizontalDirection = direction;
         horizontalDirection.y = 0f;
         horizontalDirection.Normalize();
@@ -92,17 +93,17 @@ public class AiLook : AiComponent
             Vector3 clampedDirection = Vector3.RotateTowards(forward, horizontalDirection, Mathf.Deg2Rad * HorizontalAngleLimit, 0f);
             clampedDirection.y = direction.y;
             clampedDirection.Normalize();
-            AimTarget.position = agent.SensorPosition + clampedDirection * Vector3.Distance(agent.SensorPosition, AimTarget.position);
+            AimTarget.position = npc.SensorPosition + clampedDirection * Vector3.Distance(npc.SensorPosition, AimTarget.position);
         }
     }
 
     bool OnIsLookingAt(Vector3 targetPosition)
     {
-        Vector3 direction = (targetPosition - agent.transform.position);
+        Vector3 direction = (targetPosition - npc.transform.position);
         direction.y = 0f;
         direction.Normalize();
 
-        Vector3 fwd = agent.transform.forward;
+        Vector3 fwd = npc.transform.forward;
         fwd.y = 0f;
         fwd.Normalize();
 
@@ -112,13 +113,13 @@ public class AiLook : AiComponent
 
     private void OnDrawGizmos()
     {
-        if (agent == null || drawGizmos == false)
+        if (npc == null || drawGizmos == false)
         {
             return;
         }
 
         Gizmos.color = gizmosColor;
-        Gizmos.DrawLine(agent.SensorPosition, AimTarget.position);
+        Gizmos.DrawLine(npc.SensorPosition, AimTarget.position);
         Gizmos.DrawWireSphere(AimTarget.position, 0.3f);
     }
 
@@ -132,7 +133,7 @@ public class AiLook : AiComponent
         if (lookTimer < 0f)
         {
             lookTimer = -1f;
-            agent.canTurn = true;
+            npc.canTurn = true;
 
             animatorTurnParameter = Mathf.Lerp(animatorTurnParameter, 0f, animatorTurnSmoothing * Time.deltaTime);
 
@@ -140,20 +141,20 @@ public class AiLook : AiComponent
         }
         else
         {
-            agent.canTurn = false;
+            npc.canTurn = false;
             NPCLookAtPosition(targetPosition);
         }
-        agent.anim.SetFloat("Turn", animatorTurnParameter);
+        npc.anim.SetFloat("Turn", animatorTurnParameter);
     }
 
     void NPCLookAtPosition(Vector3 position)
     {
-        Vector3 directionToTarget = position - agent.transform.position;
+        Vector3 directionToTarget = position - npc.transform.position;
         directionToTarget.y = 0;
 
         Quaternion targetRotation = Quaternion.LookRotation(directionToTarget);
-        agent.transform.rotation = Quaternion.RotateTowards(
-            agent.transform.rotation,
+        npc.transform.rotation = Quaternion.RotateTowards(
+            npc.transform.rotation,
             targetRotation,
             turnSpeed * Time.deltaTime
         );
@@ -163,11 +164,11 @@ public class AiLook : AiComponent
 
     void UpdateAnimatorTurnParameter(Vector3 targetPosition)
     {
-        Vector3 normalizedDirection = targetPosition - agent.transform.position;
+        Vector3 normalizedDirection = targetPosition - npc.transform.position;
         normalizedDirection.y = 0f;
         normalizedDirection.Normalize();
 
-        Vector3 forward = agent.transform.forward;
+        Vector3 forward = npc.transform.forward;
         float angle = Vector3.SignedAngle(forward, normalizedDirection, Vector3.up);
 
         float maxAngle = 30f;
@@ -178,8 +179,8 @@ public class AiLook : AiComponent
 
     void NPCLookForward()
     {
-        Vector3 pos = agent.transform.position;
-        pos += agent.transform.forward * 1000.0f;
+        Vector3 pos = npc.transform.position;
+        pos += npc.transform.forward * 1000.0f;
         pos += Vector3.up * 1.5f;
 
         NPCLookAtPosition(pos);

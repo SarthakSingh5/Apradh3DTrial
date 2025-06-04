@@ -69,31 +69,31 @@ public class AiSensor : MonoBehaviour
     }
 
     public bool IsInSight(GameObject obj)
+{
+    Vector3 origin = transform.position + Vector3.up * 0.5f; // Adjust origin to avoid self-collision
+    Vector3 dest = obj.transform.position + Vector3.up * 0.5f; // Center on player
+    Vector3 direction = dest - origin;
+
+    if (direction.y > height || direction.y < -height) // Allow negative height for robustness
     {
-        Vector3 origin = transform.position;
-        Vector3 dest = obj.transform.position;
-        Vector3 direction = dest - origin;
-
-        if (direction.y > height || direction.y < 0)
-        {
-            return false;
-        }
-
-        direction.y = 0;
-        float deltaAngle = Vector3.Angle(direction, transform.forward);
-
-        if (deltaAngle > angle)
-        {
-            return false;
-        }
-
-        if (Physics.Linecast(origin, dest, occlusionLayers))
-        {
-            return false;
-        }
-
-        return true;
+        return false;
     }
+
+    direction.y = 0;
+    float deltaAngle = Vector3.Angle(direction, transform.forward);
+
+    if (deltaAngle > angle)
+    {
+        return false;
+    }
+
+    if (Physics.Linecast(origin, dest, occlusionLayers))
+    {
+        return false;
+    }
+
+    return true;
+}
 
     Mesh CreateWedgeMesh()
     {

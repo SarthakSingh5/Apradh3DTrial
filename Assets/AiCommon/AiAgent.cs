@@ -6,31 +6,25 @@ using UnityEngine.Animations.Rigging;
 using UnityEngine.Events;
 
 
-public class AiAgent : MonoBehaviour
+public class Npc : MonoBehaviour
 {
-    public AiStateMachine stateMachine;
-    public AiStateId initialState;
-    public NavMeshAgent navMeshAgent;
-    public AiAgentConfig config;
-    public Transform playerTransform;
-    [HideInInspector] public AiTargetingSystem targeting;
-    [HideInInspector] public AiWeaponManager weaponManager;
     [HideInInspector] public Animator anim;
-    [HideInInspector] public AiCoverMovement coverMovement;
-    [HideInInspector] public AiSensor sensor;
-    [HideInInspector] public WorldBounds worldBounds;
-    public Transform aimTarget;
-    public Rig aimRig;
+
+    public float WalkSpeed = 3.5f;
+	public float RunSpeed = 7f;
 
     public Vector3 velocity = Vector3.zero;
+    public Vector3 direction = Vector3.zero;
     public bool canTurn = true;
     public bool canMove = false;
 
+    public UnityAction<Vector3> SetDestination;
+    public UnityAction<float> SetMaxSpeed;
+
     public UnityAction<Vector3> LookAt;
+    public UnityAction LookForward;
     public System.Func<Vector3, bool> IsLookingAt;
 
-    #region Gun Properties and Delegates
-    public Gun gun;
     public bool carryingGun = true;
 
 
@@ -52,8 +46,6 @@ public class AiAgent : MonoBehaviour
 
     public UnityAction TryShoot;
 
-    #endregion
-
     public Vector3 SensorPosition
     {
         get
@@ -62,41 +54,36 @@ public class AiAgent : MonoBehaviour
         }
     }
 
-
-
-    // Start is called before the first frame update
-    void Start()
+    protected void Awake()
     {
-        playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
-        navMeshAgent = GetComponent<NavMeshAgent>();
-        targeting = GetComponent<AiTargetingSystem>();
-        weaponManager = GetComponentInChildren<AiWeaponManager>();
-        coverMovement = GetComponent<AiCoverMovement>();
-        worldBounds = GetComponent<WorldBounds>();
-        sensor = GetComponent<AiSensor>();
-        anim = GetComponent<Animator>();
-        gun = GetComponentInChildren<Gun>();
-        stateMachine = new AiStateMachine(this);
-        stateMachine.RegisterState(new AiIdleState());
-        stateMachine.RegisterState(new AiFindTargetState());
-        stateMachine.RegisterState(new AiAttackTargetState());
-        stateMachine.RegisterState(new AiEngageTargetState());
-        stateMachine.RegisterState(new AiCoverState());
-        stateMachine.ChangeState(initialState);
+        if (anim == null)
+        {
+            anim = GetComponent<Animator>();
+        }
+
+        if (anim == null)
+        {
+            Debug.LogError($"Animator not found on '{gameObject.name}'");
+        }
     }
 
-    // Update is called once per frame
-    void Update()
+    private void Update()
     {
         RaycastHit hit;
         if (Physics.Raycast(transform.position, Vector3.down, out hit, Mathf.Infinity))
         {
             transform.position = hit.point; // Snap NPC to ground
         }
-        stateMachine.Update();
+    }
 
-        velocity = navMeshAgent.velocity;
-        navMeshAgent.updateRotation = canTurn; // Enable or disable rotation based on canTurn
-        navMeshAgent.isStopped = !canMove; // Enable or disable movement based on canMove
+    
+    private void LateUpdate()
+    {
+        Vector3 horizontalVelocity = new Vector3(velocity.x, 0f, velocity.z);
+
+        if (horizontalVelocity.sqrMagnitude > 3f)
+        {
+            direction = horizontalVelocity.normalized;
+        }
     }
 }

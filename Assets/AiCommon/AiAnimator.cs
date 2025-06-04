@@ -1,27 +1,27 @@
 using UnityEngine;
 
-public class AiAnimator : AiComponent
+public class NpcAnimator : NpcComponent
 {
     private void Update()
     {
-        float forwardSpeed = Vector3.Dot(agent.velocity, agent.transform.forward);
-        float rightSpeed = Vector3.Dot(agent.velocity, agent.transform.right);
+        float forwardSpeed = Vector3.Dot(npc.velocity, npc.transform.forward);
+        float rightSpeed = Vector3.Dot(npc.velocity, npc.transform.right);
 
-        agent.anim.SetFloat("Speed", forwardSpeed);
-        agent.anim.SetFloat("StrafeSpeed", rightSpeed);
+        npc.anim.SetFloat("Speed", forwardSpeed);
+        npc.anim.SetFloat("StrafeSpeed", rightSpeed);
 
-        if (agent.carryingGun)
+        if (npc.carryingGun)
         {
-            agent.anim.SetLayerWeight(1, 1f);
-            agent.gun.gameObject.SetActive(true);
+            npc.anim.SetLayerWeight(1, 1f);
+
         }
         else
         {
-            agent.anim.SetLayerWeight(1, 0f);
-            agent.gun.gameObject.SetActive(false);
+            npc.anim.SetLayerWeight(1, 0f);
+            dog.gun.gameObject.SetActive(false);
         }
 
-        agent.anim.SetBool("Aim", agent.Aiming);
+        npc.anim.SetBool("Aim", npc.Aiming);
 
         
 

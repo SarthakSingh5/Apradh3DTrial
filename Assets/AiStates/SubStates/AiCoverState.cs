@@ -5,24 +5,23 @@ public class AiCoverState : AiState
     {
         return AiStateId.Cover;
     }
-    public void Enter(AiAgent agent)
+    public void Enter(Dog dog)
     {
-        agent.coverMovement.StartHiding(agent);
+        dog.coverMovement.StartHiding(dog);
     }
 
-    public void Update(AiAgent agent)
+    public void Update(Dog dog)
     {
         // Check if the AI is peeking and does not have TargetInsight
-        if (agent.coverMovement.isPeeking && !agent.targeting.TargetInSight)
+        if (dog.coverMovement.isPeeking && !dog.targeting.TargetInSight)
         {
-            agent.stateMachine.ChangeState(AiStateId.EngageTarget);
+            dog.stateMachine.ChangeState(AiStateId.EngageTarget);
         }
     }
 
-    public void Exit(AiAgent agent)
+    public void Exit(Dog dog)
     {
-        agent.coverMovement.StopHiding(agent);
-        Debug.Log("Exiting Cover State at " + Time.time);
+        dog.coverMovement.StopHiding(dog);
     }
 
     

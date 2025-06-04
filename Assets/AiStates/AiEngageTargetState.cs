@@ -6,31 +6,31 @@ public class AiEngageTargetState : AiState
 
     public AiStateId GetId() => AiStateId.EngageTarget;
 
-    public void Enter(AiAgent agent)
+    public void Enter(Dog dog)
     {
-        agent.SetAim(true);
+        dog.npc.SetAim(true);
         // Initialize the sub-state machine when entering the state
-        subFSM = new AiEngageSubStateMachine(agent);
+        subFSM = new AiEngageSubStateMachine(dog);
         
     }
 
-    public void Exit(AiAgent agent)
+    public void Exit(Dog dog)
     {
         // Clean up when exiting the state
         subFSM.Stop();
     }
 
-    public void Update(AiAgent agent)
+    public void Update(Dog dog)
     {
         // If no target, change to FindTarget state
-        if (!agent.targeting.HasTarget)
+        if (!dog.targeting.HasTarget)
         {
-            agent.stateMachine.ChangeState(AiStateId.FindTarget);
+            dog.stateMachine.ChangeState(AiStateId.FindTarget);
         }
-        else if(agent.targeting.TargetInSight && agent.coverMovement.HasAnyCover(agent.targeting.TargetPosition))
+        else if(dog.targeting.TargetInSight && dog.coverMovement.HasAnyCover(dog.targeting.TargetPosition))
         {
             // If the target is in sight, change to Cover state
-            agent.stateMachine.ChangeState(AiStateId.Cover);
+            dog.stateMachine.ChangeState(AiStateId.Cover);
         }
 
         // Update the sub-state machine (Follow, FlankLeft, FlankRight)

@@ -6,45 +6,45 @@ public class AiAttackTargetState : AiState
 {
     public AiStateId GetId() { return AiStateId.AttackTarget; }
 
-    public void Enter(AiAgent agent)
+    public void Enter(Dog dog)
     {
-        agent.navMeshAgent.stoppingDistance = agent.config.attackStoppingDistance;
-        agent.navMeshAgent.speed = agent.config.attackSpeed;
+        dog.agent.stoppingDistance = dog.config.attackStoppingDistance;
+        dog.agent.speed = dog.config.attackSpeed;
     }
 
-    public void Update(AiAgent agent)
+    public void Update(Dog dog)
     {
-        if (!agent.targeting.HasTarget)
+        if (!dog.targeting.HasTarget)
         {
-            agent.anim.SetBool("isAiming", false);
-            agent.aimRig.weight = 0.0f;
-            agent.stateMachine.ChangeState(AiStateId.FindTarget);
+            dog.npc.anim.SetBool("isAiming", false);
+            dog.aimRig.weight = 0.0f;
+            dog.stateMachine.ChangeState(AiStateId.FindTarget);
             return;
         }
-        agent.anim.SetBool("isAiming", true);
-        agent.aimTarget.position = agent.targeting.Target.transform.position;
-        agent.aimRig.weight = 1.0f;
-        agent.weaponManager.aimTarget = agent.targeting.Target.transform;
-        agent.navMeshAgent.destination = agent.targeting.TargetPosition;
+        dog.npc.anim.SetBool("isAiming", true);
+        dog.aimTarget.position = dog.targeting.Target.transform.position;
+        dog.aimRig.weight = 1.0f;
+        dog.weaponManager.aimTarget = dog.targeting.Target.transform;
+        dog.agent.destination = dog.targeting.TargetPosition;
 
-        UpdateFiring(agent);
+        UpdateFiring(dog);
     }
 
-    private void UpdateFiring(AiAgent agent)
+    private void UpdateFiring(Dog dog)
     {
-        if (agent.targeting.TargetInSight)
+        if (dog.targeting.TargetInSight)
         {
-            agent.weaponManager.SetFiring(true);
+            dog.weaponManager.SetFiring(true);
         }
         else
         {
-            agent.weaponManager.SetFiring(false);
+            dog.weaponManager.SetFiring(false);
         }
     }
 
-    public void Exit(AiAgent agent)
+    public void Exit(Dog dog)
     {
-        agent.navMeshAgent.stoppingDistance = 0.0f;
+        dog.agent.stoppingDistance = 0.0f;
     }
 
     

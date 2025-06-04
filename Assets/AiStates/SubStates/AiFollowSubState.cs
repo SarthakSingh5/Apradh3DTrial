@@ -4,76 +4,75 @@ public class AiFollowSubState : AiEngageSubState
 {
     public float maxDistance = 15f;
     public float minDistance = 4f;
-    public virtual void Enter(AiAgent agent)
+    public virtual void Enter(Dog dog)
     {
-        agent.canMove = true;
+        dog.npc.canMove = true;
     }
 
-    public virtual void Update(AiAgent agent)
+    public virtual void Update(Dog dog)
     {
-        GoToTarget(agent);
+        GoToTarget(dog);
     }
 
-    public virtual void Exit(AiAgent agent)
+    public virtual void Exit(Dog dog)
     {
     }
 
-    protected virtual void GoToTarget(AiAgent agent)
+    protected virtual void GoToTarget(Dog dog)
     {
-        Debug.Log("Following target: " + agent.targeting.TargetPosition);
-        float distance = agent.targeting.TargetDistance;
-        UpdateSpeed(agent, distance);
+        float distance = dog.targeting.TargetDistance;
+        UpdateSpeed(dog, distance);
 
         if (distance <= maxDistance)
         {
-            agent.canMove = false;
+            dog.npc.canMove = false;
         }
         else
         {
-            agent.canMove = true;
-            agent.navMeshAgent.SetDestination(agent.targeting.TargetPosition);
+            dog.npc.canMove = true;
+            dog.npc.SetDestination?.Invoke(dog.targeting.TargetPosition);
         }
 
         if (distance <= minDistance)
         {
-            GetAwayFrom(agent, agent.targeting.TargetPosition);
+            GetAwayFrom(dog, dog.targeting.TargetPosition);
         }
 
-        if (!agent.targeting.TargetInSight)
+        if (!dog.targeting.TargetInSight)
         {
-            agent.canMove = true;
-            agent.navMeshAgent.SetDestination(agent.targeting.TargetPosition);
+            dog.npc.canMove = true;
+            dog.npc.SetDestination?.Invoke(dog.targeting.TargetPosition);
         }
     }
 
-    protected void UpdateSpeed(AiAgent agent, float distance)
+    protected void UpdateSpeed(Dog dog, float distance)
     {
         // setting max movement speed
         float t = Mathf.InverseLerp(maxDistance, maxDistance * 1.5f, distance);
-        agent.navMeshAgent.speed = Mathf.Lerp(agent.config.walkSpeed, agent.config.runSpeed, t);
+        dog.agent.speed = Mathf.Lerp(dog.config.walkSpeed, dog.config.runSpeed, t);
     }
 
-    public void GetAwayFrom(AiAgent agent, Vector3 point)
+    public void GetAwayFrom(Dog dog, Vector3 point)
     {
-        Vector3 direction = (agent.transform.position - point).normalized;
-        Vector3 targetPosition = direction * 5f + agent.transform.position;
+        Vector3 direction = (dog.transform.position - point).normalized;
+        Vector3 targetPosition = direction * 5f + dog.transform.position;
 
         if (NavMesh.SamplePosition(targetPosition, out NavMeshHit hit, 4f, NavMesh.AllAreas))
         {
             targetPosition = hit.position;
-            agent.canMove = true;
-            agent.navMeshAgent.SetDestination(targetPosition);
+            dog.npc.canMove = true;
+            dog.npc.SetDestination?.Invoke(targetPosition);
         }
     }
 
-    protected void UpdateRotation(AiAgent agent, Vector3 targetPosition)
+    protected void UpdateRotation(Dog dog, Vector3 targetPosition)
     {
-        Vector3 lookDir = agent.targeting.TargetPosition - agent.transform.position;
+        Vector3 lookDir = dog.targeting.TargetPosition - dog.transform.position;
         lookDir.y = 0f;
         if (lookDir.sqrMagnitude > 0.01f)
         {
             Quaternion targetRot = Quaternion.LookRotation(lookDir);
-            agent.transform.rotation = Quaternion.Slerp(agent.transform.rotation, targetRot, Time.deltaTime * 10f);
+            dog.transform.rotation = Quaternion.Slerp(dog.transform.rotation, targetRot, Time.deltaTime * 10f);
         }
 
     }

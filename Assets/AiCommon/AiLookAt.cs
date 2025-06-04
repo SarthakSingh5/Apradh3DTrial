@@ -1,14 +1,14 @@
 using UnityEngine;
 
-public class AiLookAt : AiComponent
+public class AiLookAt : NpcComponent
 {
     private void Update()
     {
-        if(agent.targeting.HasTarget && !agent.inCover)
+        if(dog.targeting.HasTarget && !npc.inCover)
         {
-            agent.canTurn = false;   
-            agent.SetAim(true);
-            agent.LookAt?.Invoke(agent.targeting.TargetPosition + Vector3.up * 1.5f);
+            npc.canTurn = false;   
+            npc.SetAim(true);
+            npc.LookAt?.Invoke(dog.targeting.TargetPosition + Vector3.up * 1.5f);
         }
     }
     

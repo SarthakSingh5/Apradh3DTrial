@@ -7,7 +7,6 @@ public class AiCoverMovement : MonoBehaviour
 {
     public LayerMask HidableLayers;
     public EnemyLineOfSightChecker LineOfSightChecker;
-    public NavMeshAgent Agent;
 
     [Range(-1, 1)]
     [Tooltip("Lower is a better hiding spot")]
@@ -37,22 +36,16 @@ public class AiCoverMovement : MonoBehaviour
     public bool isPeeking = false;
 
 
-
-    private void Awake()
+    public void StartHiding(Dog dog)
     {
-        Agent = GetComponent<NavMeshAgent>();
-    }
-
-    public void StartHiding(AiAgent agent)
-    {
-        StopHiding(agent);
-        movementCoroutine = StartCoroutine(Hide(agent));
-        peekCoroutine = StartCoroutine(PeekAtTargetRoutine(agent));
+        StopHiding(dog);
+        movementCoroutine = StartCoroutine(Hide(dog));
+        peekCoroutine = StartCoroutine(PeekAtTargetRoutine(dog));
 
     }
 
 
-    public void StopHiding(AiAgent agent)
+    public void StopHiding(Dog dog)
     {
         if (movementCoroutine != null)
         {
@@ -65,13 +58,13 @@ public class AiCoverMovement : MonoBehaviour
             peekCoroutine = null;
         }
         isPeeking = false;
-        agent.inCover = false;
-        
+        dog.npc.inCover = false;
+
     }
 
     public bool HasAnyCover(Vector3 TargetPosition)
     {
-        int hits = Physics.OverlapSphereNonAlloc(Agent.transform.position, LineOfSightChecker.Collider.radius, Colliders, HidableLayers);
+        int hits = Physics.OverlapSphereNonAlloc(transform.position, LineOfSightChecker.Collider.radius, Colliders, HidableLayers);
 
         int validHits = 0;
 
@@ -88,9 +81,8 @@ public class AiCoverMovement : MonoBehaviour
     }
 
 
-    private IEnumerator Hide(AiAgent agent)
+    private IEnumerator Hide(Dog dog)
     {
-        Debug.Log("Starting Hide Routine");
         if (peekCoroutine != null)
         {
             StopCoroutine(peekCoroutine);
@@ -101,13 +93,13 @@ public class AiCoverMovement : MonoBehaviour
 
         while (true)
         {
-            Vector3 TargetPosition = agent.targeting.TargetPosition;
+            Vector3 TargetPosition = dog.targeting.TargetPosition;
             for (int i = 0; i < Colliders.Length; i++)
             {
                 Colliders[i] = null;
             }
 
-            int hits = Physics.OverlapSphereNonAlloc(Agent.transform.position, LineOfSightChecker.Collider.radius, Colliders, HidableLayers);
+            int hits = Physics.OverlapSphereNonAlloc(dog.transform.position, LineOfSightChecker.Collider.radius, Colliders, HidableLayers);
 
             int hitReduction = 0;
             for (int i = 0; i < hits; i++)
@@ -131,9 +123,9 @@ public class AiCoverMovement : MonoBehaviour
 
                     foreach (var point in candidatePoints)
                     {
-                        if (NavMesh.SamplePosition(point, out NavMeshHit hit, 5f, Agent.areaMask))
+                        if (NavMesh.SamplePosition(point, out NavMeshHit hit, 5f, dog.agent.areaMask))
                         {
-                            if (!NavMesh.FindClosestEdge(hit.position, out hit, Agent.areaMask))
+                            if (!NavMesh.FindClosestEdge(hit.position, out hit, dog.agent.areaMask))
                             {
                                 Debug.LogError($"Unable to find edge close to (hit.position)");
                             }
@@ -147,21 +139,21 @@ public class AiCoverMovement : MonoBehaviour
                             if (Vector3.Dot(hit.normal, (TargetPosition - hit.position).normalized) < HideSensitivity)
                             {
 
-                                agent.inCover = false;
+                                dog.npc.inCover = false;
                                 lastHidePosition = hit.position;
 
 
 
-                                Agent.SetDestination(lastHidePosition);
+                                dog.npc.SetDestination?.Invoke(lastHidePosition);
 
-                                yield return new WaitUntil(() => !Agent.pathPending && Agent.remainingDistance < 0.2f);
+                                yield return new WaitUntil(() =>!dog.agent.pathPending && dog.agent.remainingDistance < 0.2f);
 
-                                agent.SetAim(false);
-                                agent.inCover = true;
-                                Vector3 pos = agent.transform.position;
+                                dog.npc.SetAim(false);
+                                dog.npc.inCover = true;
+                                Vector3 pos = dog.transform.position;
                                 pos += hit.normal * 1000.0f;
                                 pos += Vector3.up * 1.5f;
-                                agent.LookAt(pos);
+                                dog.npc.LookAt(pos);
 
                                 break;
 
@@ -175,30 +167,30 @@ public class AiCoverMovement : MonoBehaviour
                 }
                 else
                 {
-                    if (NavMesh.SamplePosition(Colliders[i].transform.position, out NavMeshHit hit1, 20f, Agent.areaMask))
+                    if (NavMesh.SamplePosition(Colliders[i].transform.position, out NavMeshHit hit1, 20f, dog.agent.areaMask))
                     {
-                        if (!NavMesh.FindClosestEdge(hit1.position, out hit1, Agent.areaMask))
+                        if (!NavMesh.FindClosestEdge(hit1.position, out hit1, dog.agent.areaMask))
                         {
                             Debug.LogError($"Unable to find edge close to {hit1.position}");
                         }
 
                         if (Vector3.Dot(hit1.normal, (TargetPosition - hit1.position).normalized) < HideSensitivity)
                         {
-                            Agent.SetDestination(hit1.position);
+                            dog.npc.SetDestination?.Invoke(hit1.position);
                             break;
                         }
                         else
                         {
-                            if (NavMesh.SamplePosition(Colliders[i].transform.position - (TargetPosition - hit1.position).normalized * 2, out NavMeshHit hit2, 20f, Agent.areaMask))
+                            if (NavMesh.SamplePosition(Colliders[i].transform.position - (TargetPosition - hit1.position).normalized * 2, out NavMeshHit hit2, 20f, dog.agent.areaMask))
                             {
-                                if (!NavMesh.FindClosestEdge(hit2.position, out hit2, Agent.areaMask))
+                                if (!NavMesh.FindClosestEdge(hit2.position, out hit2, dog.agent.areaMask))
                                 {
                                     Debug.LogError($"Unable to find edge close to {hit2.position} (second attempt)");
                                 }
 
                                 if (Vector3.Dot(hit2.normal, (TargetPosition - hit2.position).normalized) < HideSensitivity)
                                 {
-                                    Agent.SetDestination(hit2.position);
+                                    dog.npc.SetDestination?.Invoke(hit2.position);
                                     break;
                                 }
                             }
@@ -233,7 +225,7 @@ public class AiCoverMovement : MonoBehaviour
         }
         else
         {
-            return Vector3.Distance(Agent.transform.position, A.transform.position).CompareTo(Vector3.Distance(Agent.transform.position, B.transform.position));
+            return Vector3.Distance(transform.position, A.transform.position).CompareTo(Vector3.Distance(transform.position, B.transform.position));
         }
     }
 
@@ -267,39 +259,37 @@ public class AiCoverMovement : MonoBehaviour
     }
 
 
-    private IEnumerator PeekAtTargetRoutine(AiAgent agent)
+    private IEnumerator PeekAtTargetRoutine(Dog dog)
     {
         WaitForSeconds waitBetweenPeeks = new WaitForSeconds(TimeBetweenPeeks);
         WaitForSeconds peekDuration = new WaitForSeconds(PeekDuration);
 
         while (true)
         {
-            Vector3 TargetPosition = agent.targeting.TargetPosition;
+            Vector3 TargetPosition = dog.targeting.TargetPosition;
 
             // Wait until agent is in cover and not moving
-            if (Agent.pathPending || Vector3.Distance(transform.position, lastHidePosition) > 0.5f)
+            if (dog.agent.pathPending || Vector3.Distance(transform.position, lastHidePosition) > 0.5f)
             {
                 yield return null;
                 continue;
             }
 
             // Ensure no peeking if state is about to change
-            if (!agent.inCover)
+            if (!dog.npc.inCover)
             {
                 yield return null;
                 continue;
             }
 
-            Debug.Log("Starting Peek Routine");
 
             Vector3 directionToTarget = (TargetPosition - lastHidePosition).normalized;
             Vector3 peekPosition = lastHidePosition + directionToTarget * PeekOffsetDistance;
 
-            if (NavMesh.SamplePosition(peekPosition, out NavMeshHit peekHit, 2f, Agent.areaMask))
+            if (NavMesh.SamplePosition(peekPosition, out NavMeshHit peekHit, 2f, dog.agent.areaMask))
             {
-                Agent.SetDestination(peekHit.position);
-                yield return new WaitUntil(() => !Agent.pathPending && Agent.remainingDistance <= 0.2f);
-                Debug.Log($"Peeking at target from {peekHit.position}");
+                dog.npc.SetDestination?.Invoke(peekHit.position);
+                yield return new WaitUntil(() => !dog.agent.pathPending && dog.agent.remainingDistance <= 0.2f);
                 isPeeking = true;
 
                 // Ensure agent stays at peek position for the full duration
@@ -307,8 +297,8 @@ public class AiCoverMovement : MonoBehaviour
                 isPeeking = false;
 
                 // Return to cover position
-                Agent.SetDestination(lastHidePosition);
-                yield return new WaitUntil(() => !Agent.pathPending && Agent.remainingDistance <= 0.2f);
+                dog.npc.SetDestination?.Invoke(lastHidePosition);
+                yield return new WaitUntil(() => !dog.agent.pathPending && dog.agent.remainingDistance <= 0.2f);
             }
             else
             {

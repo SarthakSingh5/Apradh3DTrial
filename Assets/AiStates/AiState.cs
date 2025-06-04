@@ -16,9 +16,9 @@ public enum AiStateId
 public interface AiState
 {
     AiStateId GetId();
-    void Enter(AiAgent agent);
-    void Update(AiAgent agent);
-    void Exit(AiAgent agent);
+    void Enter(Dog dog);
+    void Update(Dog dog);
+    void Exit(Dog dog);
     
     
 

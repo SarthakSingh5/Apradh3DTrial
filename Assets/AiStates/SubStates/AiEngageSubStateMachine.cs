@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 public class AiEngageSubStateMachine
 {
-    AiAgent agent;
+    Dog dog;
     Dictionary<AiEngageSubStateId, AiEngageSubState> states;
     AiEngageSubState currentState;
 
@@ -12,9 +12,9 @@ public class AiEngageSubStateMachine
     float timer;
     bool isStopped; // Track if the sub-state machine is stopped
 
-    public AiEngageSubStateMachine(AiAgent agent)
+    public AiEngageSubStateMachine(Dog dog)
     {
-        this.agent = agent;
+        this.dog = dog;
         states = new Dictionary<AiEngageSubStateId, AiEngageSubState>
         {
             { AiEngageSubStateId.Follow, new AiFollowSubState() },
@@ -27,7 +27,7 @@ public class AiEngageSubStateMachine
 
     public void Update()
     {
-        if (isStopped || !agent.targeting.HasTarget)
+        if (isStopped || !dog.targeting.HasTarget)
         {
             Stop();
             return;
@@ -40,14 +40,14 @@ public class AiEngageSubStateMachine
             ChangeState(GetRandomState());
         }
 
-        currentState?.Update(agent);
+        currentState?.Update(dog);
     }
 
     public void ChangeState(AiEngageSubStateId newState)
     {
-        currentState?.Exit(agent);
+        currentState?.Exit(dog);
         currentState = states[newState];
-        currentState.Enter(agent);
+        currentState.Enter(dog);
         timer = 0f;
     }
 
@@ -66,8 +66,7 @@ public class AiEngageSubStateMachine
     {
         if (!isStopped && currentState != null)
         {
-            currentState.Exit(agent);
-            Debug.Log("Stopping SubState: " + currentState + " at " + Time.time);
+            currentState.Exit(dog);
             currentState = null;
             isStopped = true;
         }

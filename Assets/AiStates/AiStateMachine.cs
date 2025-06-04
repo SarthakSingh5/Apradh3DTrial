@@ -5,12 +5,12 @@ using System.Collections.Generic;
 public class AiStateMachine
 {
     public AiState[] states;
-    public AiAgent agent;
+    public Dog dog;
     public AiStateId currentState;
 
-    public AiStateMachine(AiAgent agent)
+    public AiStateMachine(Dog dog)
     {
-        this.agent = agent;
+        this.dog = dog;
         int numStates = System.Enum.GetNames(typeof(AiStateId)).Length;
         states = new AiState[numStates];
     }
@@ -29,14 +29,14 @@ public class AiStateMachine
 
     public void Update()
     {
-        GetState(currentState)?.Update(agent);
+        GetState(currentState)?.Update(dog);
     }
 
     public void ChangeState(AiStateId newState)
     {
-        GetState(currentState)?.Exit(agent);
+        GetState(currentState)?.Exit(dog);
         currentState = newState;
-        GetState(currentState)?.Enter(agent);
+        GetState(currentState)?.Enter(dog);
     }
 
 }

@@ -39,14 +39,14 @@ public class AiSensoryMemory
         }
     }
 
-    public void RefreshMemory(GameObject agent, GameObject target)
+    public void RefreshMemory(GameObject dog, GameObject target)
     {
         AiMemory memory = FetchMemory(target);
         memory.gameObject = target;
         memory.lastKnownPosition = target.transform.position;
-        memory.direction = target.transform.position - agent.transform.position;
+        memory.direction = target.transform.position - dog.transform.position;
         memory.distance = memory.direction.magnitude;
-        memory.angle = Vector3.Angle(agent.transform.forward, memory.direction);
+        memory.angle = Vector3.Angle(dog.transform.forward, memory.direction);
         memory.lastSeen = Time.time;
     }
 

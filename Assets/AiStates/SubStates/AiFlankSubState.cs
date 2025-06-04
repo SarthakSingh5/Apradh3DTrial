@@ -10,41 +10,40 @@ public class AiFlankSubState : AiFollowSubState
         this.flankRight = flankRight;
     }
 
-    void MoveToFlank(AiAgent agent)
+    void MoveToFlank(Dog dog)
     {
-        Vector3 direction = (agent.transform.position - agent.targeting.TargetPosition).normalized;
+        Vector3 direction = (dog.transform.position - dog.targeting.TargetPosition).normalized;
         float angle = flankAngle;
         angle *= flankRight ? 1f : -1f;
         direction = Quaternion.Euler(0f, angle, 0f) * direction;
-        Vector3 destination = agent.targeting.TargetPosition + direction * (maxDistance + minDistance) * 0.5f;
-        agent.canMove = true;
-        agent.navMeshAgent.SetDestination(destination);
+        Vector3 destination = dog.targeting.TargetPosition + direction * (maxDistance + minDistance) * 0.5f;
+        dog.npc.canMove = true;
+        dog.npc.SetDestination?.Invoke(destination);
     }
 
-    protected override void GoToTarget(AiAgent agent)
+    protected override void GoToTarget(Dog dog)
     {
-        Debug.Log("Flanking target: " + agent.targeting.TargetPosition);
-        float distance = agent.targeting.TargetDistance;
-        UpdateSpeed(agent,distance);
+        float distance = dog.targeting.TargetDistance;
+        UpdateSpeed(dog,distance);
 
         if (distance <= maxDistance && distance >= minDistance)
         {
-            MoveToFlank(agent);
+            MoveToFlank(dog);
         }
         else if (distance > maxDistance)
         {
-            agent.canMove = true;
-            agent.navMeshAgent.SetDestination(agent.targeting.TargetPosition);
+            dog.npc.canMove = true;
+            dog.npc.SetDestination?.Invoke(dog.targeting.TargetPosition);
         }
         else if (distance < minDistance)
         {
-            GetAwayFrom(agent, agent.targeting.TargetPosition);
+            GetAwayFrom(dog, dog.targeting.TargetPosition);
         }
 
-        if (!agent.targeting.TargetInSight)
+        if (!dog.targeting.TargetInSight)
         {
-            agent.canMove = true;
-            agent.navMeshAgent.SetDestination(agent.targeting.TargetPosition);
+            dog.npc.canMove = true;
+            dog.npc.SetDestination?.Invoke(dog.targeting.TargetPosition);
         }
     }
 

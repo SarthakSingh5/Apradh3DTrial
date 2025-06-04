@@ -7,31 +7,31 @@ public class AiIdleState : AiState
         return AiStateId.Idle;
     }
 
-    public void Enter(AiAgent agent)
+    public void Enter(Dog dog)
     {
 
     }
 
-    public void Update(AiAgent agent)
+    public void Update(Dog dog)
     {
-        Vector3 playerDirection = agent.playerTransform.position - agent.transform.position;
-        if (playerDirection.magnitude > agent.config.maxSightDistance)
+        Vector3 playerDirection = dog.playerTransform.position - dog.transform.position;
+        if (playerDirection.magnitude > dog.config.maxSightDistance)
         {
             return;
         }
 
-        Vector3 agentDirection = agent.transform.forward;
+        Vector3 dogDirection = dog.transform.forward;
         playerDirection.Normalize();
 
-        float dotProduct = Vector3.Dot(playerDirection, agentDirection);
+        float dotProduct = Vector3.Dot(playerDirection, dogDirection);
         if (dotProduct > 0.0f)
         {
-            agent.stateMachine.ChangeState(AiStateId.ChasePlayer);
+            dog.stateMachine.ChangeState(AiStateId.ChasePlayer);
         }
 
     }
 
-    public void Exit(AiAgent agent)
+    public void Exit(Dog dog)
     {
 
     }
