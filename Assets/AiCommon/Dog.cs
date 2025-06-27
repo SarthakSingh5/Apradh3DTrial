@@ -16,7 +16,6 @@ public class Dog : AiController
     [HideInInspector] public AiCoverMovement coverMovement;
     [HideInInspector] public AiSensor sensor;
     [HideInInspector] public WorldBounds worldBounds;
-    [HideInInspector] public Gun gun;
     public Transform aimTarget;
     public Rig aimRig;
 
@@ -28,7 +27,6 @@ public class Dog : AiController
         coverMovement = GetComponent<AiCoverMovement>();
         worldBounds = GetComponent<WorldBounds>();
         sensor = GetComponent<AiSensor>();
-        gun = GetComponentInChildren<Gun>();
         stateMachine = new AiStateMachine(this);
         stateMachine.RegisterState(new AiIdleState());
         stateMachine.RegisterState(new AiFindTargetState());

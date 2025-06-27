@@ -1,7 +1,8 @@
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
 
-public class AiLook : NpcComponent
+
+public class NpcLook : NpcComponent
 {
     [SerializeField] public float turnSpeed = 15f;
     [SerializeField] float expireTime = 0.2f;
@@ -58,6 +59,11 @@ public class AiLook : NpcComponent
     {
         SpineAimTarget.position = Vector3.Lerp(SpineAimTarget.position, position, 5f * Time.deltaTime);
     }
+
+    void SetAimTargetPosition(Vector3 position)
+    {
+        AimTarget.position = Vector3.Lerp(AimTarget.position, position, 5f * Time.deltaTime);
+    }
     #endregion
 
     void OnLookAt(Vector3 position)
@@ -77,6 +83,16 @@ public class AiLook : NpcComponent
         {
             SetSpineAimTargetPosition(AimTarget.position);
         }
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (npc == null || !drawGizmos)
+            return;
+
+        Gizmos.color = gizmosColor;
+        Gizmos.DrawLine(npc.SensorPosition, AimTarget.position);
+        Gizmos.DrawWireSphere(AimTarget.position, 0.3f);
     }
 
     void ClampAimTargetAngle()
@@ -108,19 +124,6 @@ public class AiLook : NpcComponent
         fwd.Normalize();
 
         return Vector3.Dot(fwd, direction) > 0.95f;
-    }
-
-
-    private void OnDrawGizmos()
-    {
-        if (npc == null || drawGizmos == false)
-        {
-            return;
-        }
-
-        Gizmos.color = gizmosColor;
-        Gizmos.DrawLine(npc.SensorPosition, AimTarget.position);
-        Gizmos.DrawWireSphere(AimTarget.position, 0.3f);
     }
 
 

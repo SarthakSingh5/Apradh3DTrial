@@ -5,7 +5,7 @@ using UnityEngine.AI;
 using UnityEngine.InputSystem;
 
 
-public class PlayerController : NpcController
+public partial class PlayerController : NpcController
 {
     [SerializeField]
     CharacterController characterController;
@@ -33,6 +33,8 @@ public class PlayerController : NpcController
 
     NavMeshAgent agent;
 
+    bool attacking = false;
+
     bool inputEnabled = true;
 
 
@@ -45,9 +47,33 @@ public class PlayerController : NpcController
 
     #region Input Callbacks
 
+    void OnTestKill(InputValue input)
+    {
+        npc.health.Points = 0f;
+    }
+
+
+    void OnTestRevive(InputValue input)
+    {
+        npc.health.Points = 1f;
+    }
+
     void OnMove(InputValue input)
     {
         MoveInput = input.Get<Vector2>();
+    }
+
+    void OnAim(InputValue input)
+    {
+        aiming = !aiming;
+
+        npc.SetAim(aiming);
+    }
+
+
+    void OnAttack(InputValue input)
+    {
+        attacking = input.isPressed;
     }
 
     void OnLook(InputValue input)
@@ -117,13 +143,27 @@ public class PlayerController : NpcController
         UpdateMovement();
         ApplyGravity();
 
-        characterController.Move(npc.velocity * Time.deltaTime);
+        if (npc.Alive)
+        {
+            if (attacking)
+            {
+                npc.TryShoot?.Invoke();
+            }
+            else
+            {
+                npc.NotShoot?.Invoke();
+            }
 
-        // if (agent != null)
-        // {
-        //     agent.isStopped = true;
-        //     agent.Warp(transform.position);
-        // }
+            UpdateAiming();
+
+            characterController.Move(npc.velocity * Time.deltaTime);
+        }
+
+        // if (agent != null && npc.Alive)
+        // 	{
+        // 		agent.isStopped = true;
+        // 		agent.Warp(transform.position);
+        // 	}
     }
 
 
@@ -169,7 +209,7 @@ public class PlayerController : NpcController
 
     void UpdateMovement()
     {
-        if (inputEnabled == false)
+        if (inputEnabled == false || !npc.Alive)
         {
             return;
         }
@@ -191,7 +231,7 @@ public class PlayerController : NpcController
 
         npc.velocity = new Vector3(velocityX, npc.velocity.y, velocityZ);
 
-        if (motion.sqrMagnitude > 0.01f)
+        if (motion.sqrMagnitude > 0.01f && !aiming)
         {
             // 
             //Quaternion targetRotation = Quaternion.Euler(0f, LookAngle.x, 0f);

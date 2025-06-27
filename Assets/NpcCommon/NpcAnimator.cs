@@ -18,7 +18,6 @@ public class NpcAnimator : NpcComponent
         else
         {
             npc.anim.SetLayerWeight(1, 0f);
-            dog.gun.gameObject.SetActive(false);
         }
 
         npc.anim.SetBool("Aim", npc.Aiming);

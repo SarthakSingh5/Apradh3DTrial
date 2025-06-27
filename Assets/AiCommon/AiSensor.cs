@@ -58,8 +58,8 @@ public class AiSensor : MonoBehaviour
             GameObject obj = colliders[i].gameObject;
             GameObject rootObj = obj.transform.root.gameObject; // Get root object of the collider
 
-            // Ignore self
-            if (rootObj == gameObject) continue;
+            // Skip if the collider belongs to this NPC or its root
+            if (obj == gameObject || obj.transform.root == transform.root) continue;
 
             if (IsInSight(obj) && !objects.Contains(rootObj)) // Avoid duplicate entries
             {
@@ -69,31 +69,31 @@ public class AiSensor : MonoBehaviour
     }
 
     public bool IsInSight(GameObject obj)
-{
-    Vector3 origin = transform.position + Vector3.up * 0.5f; // Adjust origin to avoid self-collision
-    Vector3 dest = obj.transform.position + Vector3.up * 0.5f; // Center on player
-    Vector3 direction = dest - origin;
-
-    if (direction.y > height || direction.y < -height) // Allow negative height for robustness
     {
-        return false;
+        Vector3 origin = transform.position + Vector3.up * 0.5f; // Adjust origin to avoid self-collision
+        Vector3 dest = obj.transform.position + Vector3.up * 0.5f; // Center on player
+        Vector3 direction = dest - origin;
+
+        if (direction.y > height || direction.y < -height) // Allow negative height for robustness
+        {
+            return false;
+        }
+
+        direction.y = 0;
+        float deltaAngle = Vector3.Angle(direction, transform.forward);
+
+        if (deltaAngle > angle)
+        {
+            return false;
+        }
+
+        if (Physics.Linecast(origin, dest, occlusionLayers))
+        {
+            return false;
+        }
+
+        return true;
     }
-
-    direction.y = 0;
-    float deltaAngle = Vector3.Angle(direction, transform.forward);
-
-    if (deltaAngle > angle)
-    {
-        return false;
-    }
-
-    if (Physics.Linecast(origin, dest, occlusionLayers))
-    {
-        return false;
-    }
-
-    return true;
-}
 
     Mesh CreateWedgeMesh()
     {
@@ -192,11 +192,6 @@ public class AiSensor : MonoBehaviour
         {
             Gizmos.color = meshColor;
             Gizmos.DrawMesh(mesh, transform.position, transform.rotation);
-        }
-        Gizmos.color = Color.green;
-        foreach (var obj in Objects)
-        {
-            Gizmos.DrawSphere(obj.transform.position, 0.2f);
         }
     }
 

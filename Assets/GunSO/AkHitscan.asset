@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5b74b7274b129b4aacbb652af27210e, type: 3}
+  m_Name: AkHitscan
+  m_EditorClassIdentifier: 
+  MaxRange: 30
+  HitImpulse: 200
+  Damage: 10
+  DamageRandom: 5
+  muzzle: {fileID: 6945981380198580026, guid: 0f3ec2894caf26a4c8be4f98240c5994, type: 3}
+  MuzzleFlashFX: {fileID: 4081528667798721779, guid: 34557e2ed53cf3c42adceb479081089b, type: 3}
+  bullet: {fileID: 8521785065109197422, guid: 89fd50d691cbc4045aa02080e5adef3a, type: 3}
+  bulletVelocity: 500
+  bulletsPerShot: 1
+  HitMask:
+    serializedVersion: 2
+    m_Bits: 10241
+  tracerPrefab: {fileID: 7320182504341720947, guid: da773cfbcdae2bf4ab56e295b26788f7, type: 3}
+  tracerSpeed: 500
+  tracerLifetime: 0.1

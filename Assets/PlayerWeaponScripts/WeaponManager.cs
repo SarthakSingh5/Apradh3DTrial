@@ -101,7 +101,7 @@ public class WeaponManager : MonoBehaviour
             GameObject currentBullet = Instantiate(bullet, barrelPos.position, barrelPos.rotation);
 
             Bullet bulletScript = currentBullet.GetComponent<Bullet>();
-            bulletScript.weapon = this;
+            
 
             bulletScript.dir = barrelPos.transform.forward;
 

@@ -17,6 +17,8 @@ public class AiController : NpcController
         {
             this.npc.SetDestination -= OnSetDestination;
             this.npc.SetMaxSpeed -= OnSetMaxSpeed;
+            this.npc.HasPathToDestination -= OnHasPathToDestination;
+			this.npc.Died -= OnDied;
         }
 
         base.SetNpc(npc);
@@ -28,6 +30,8 @@ public class AiController : NpcController
 
             npc.SetDestination += OnSetDestination;
             npc.SetMaxSpeed += OnSetMaxSpeed;
+            this.npc.HasPathToDestination += OnHasPathToDestination;
+			this.npc.Died += OnDied;
 
             if (agent == null)
             {
@@ -36,8 +40,28 @@ public class AiController : NpcController
         }
     }
 
+
+    void OnDied()
+    {
+        agent.isStopped = true;
+        agent.updateRotation = false;
+        agent.enabled = false;
+
+        gameObject.SetActive(false);
+    }
+
+
+    bool OnHasPathToDestination()
+    {
+        return agent.pathStatus != NavMeshPathStatus.PathInvalid;
+    }
+
     void OnSetDestination(Vector3 destination)
     {
+        if (agent.enabled == false)
+        {
+            return;
+        }
         agent.SetDestination(destination);
     }
 

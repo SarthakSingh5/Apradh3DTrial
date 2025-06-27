@@ -19,8 +19,8 @@ TagManager:
   - NPC
   - Character
   - Cover
-  - 
-  - 
+  - CharacterController
+  - Ragdoll
   - 
   - 
   - 
