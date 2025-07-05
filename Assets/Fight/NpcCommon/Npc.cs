@@ -126,11 +126,7 @@ public class Npc : MonoBehaviour
 
     private void Update()
     {
-        RaycastHit hit;
-        if (Physics.Raycast(transform.position, Vector3.down, out hit, Mathf.Infinity))
-        {
-            transform.position = hit.point; // Snap NPC to ground
-        }
+        
     }
 
 
