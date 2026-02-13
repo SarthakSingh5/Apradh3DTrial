@@ -16081,10 +16081,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_RigLayers:
-  - m_Rig: {fileID: 22302168}
-    m_Active: 0
   - m_Rig: {fileID: 576201178}
     m_Active: 1
+  - m_Rig: {fileID: 22302168}
+    m_Active: 0
   - m_Rig: {fileID: 1946773356}
     m_Active: 1
   m_Effectors: []

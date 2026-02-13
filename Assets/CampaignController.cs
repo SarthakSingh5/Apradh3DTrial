@@ -103,20 +103,37 @@ public class CampaignController : MonoBehaviour
         }
     }
 
-    void InteractUnit(GameObject targetUnit)
+        void InteractUnit(GameObject targetUnit)
     {
-        // if (targetUnit != selectedUnit)
-        // {
-        //     AttackTarget(targetUnit);
-        // }
-        Debug.Log("Interacted with unit: " + targetUnit.name);
+        // 1. Calculate the distance to maintain (The "Aside" distance)
+        // For 150 scale, a buffer of 15-20 units usually looks like the Total War 'gap'
+        float engagementBuffer = 20.0f; 
+
+        // 2. Get direction from target back to our unit
+        Vector3 dir = (selectedUnit.transform.position - targetUnit.transform.position).normalized;
+
+        // 3. The target position is the enemy's spot PLUS the buffer in our direction
+        Vector3 stopPosition = targetUnit.transform.position + (dir * engagementBuffer);
+
+        // 4. Snap to your grid to keep that strategic look
+        MoveUnit(SnapToGrid(stopPosition));
+
+        Debug.Log("Armies are drawing lines of battle outside " + targetUnit.name);
     }
 
     void InteractBuilding(GameObject targetBuilding)
     {
-        // Building interaction logic (e.g., enter, attack, etc.)
-        Debug.Log("Interacted with building: " + targetBuilding.name);
+        // Buildings are bigger, so they need a larger 'Aside' buffer
+        float buildingBuffer = 40.0f; 
+
+        Vector3 dir = (selectedUnit.transform.position - targetBuilding.transform.position).normalized;
+        Vector3 stopPosition = targetBuilding.transform.position + (dir * buildingBuffer);
+
+        MoveUnit(SnapToGrid(stopPosition));
+
+        Debug.Log("Establishing a siege perimeter around " + targetBuilding.name);
     }
+
 
     void DeselectAll()
     {
