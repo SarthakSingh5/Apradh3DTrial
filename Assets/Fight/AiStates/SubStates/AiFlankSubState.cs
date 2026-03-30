@@ -4,18 +4,29 @@ public class AiFlankSubState : AiFollowSubState
 {
     public float flankAngle = 20f;
     public bool flankRight;
+    private bool hasSetInitialDestination = false;
     public AiFlankSubState(bool flankRight)
     {
         this.flankRight = flankRight;
     }
 
+    public override void Enter(Dog dog)
+    {
+        base.Enter(dog);
+        hasSetInitialDestination = false; // Reset when we start flanking
+    }
+
     public override void Update(Dog dog)
     {
-        GoToTarget(dog);
-
-        // RULE: Flank is 'Done' as soon as we arrive at the side
-        if (!dog.agent.pathPending)
+        if (!hasSetInitialDestination)
         {
+            GoToTarget(dog);
+            hasSetInitialDestination = true;
+        }
+        // RULE: Flank is 'Done' as soon as we arrive at the side
+        if (!dog.agent.pathPending && dog.agent.remainingDistance <= dog.agent.stoppingDistance+0.5f)
+        {
+            Debug.Log("Flank complete");
             dog.npc.OnTaskComplete?.Invoke();
         }
     }
@@ -41,6 +52,7 @@ public class AiFlankSubState : AiFollowSubState
         direction = Quaternion.Euler(0f, randomAngle, 0f) * direction;
         Vector3 destination = dog.targeting.TargetPosition + direction * randomRadius;
 
+        Debug.Log($"Flanking to {destination}");
         dog.npc.canMove = true;
         dog.npc.SetDestination?.Invoke(destination);
     }
