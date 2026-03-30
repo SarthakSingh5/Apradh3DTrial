@@ -108,6 +108,8 @@ public class Npc : MonoBehaviour
 
     #endregion
 
+    public UnityAction OnTaskComplete;
+
 
 
 

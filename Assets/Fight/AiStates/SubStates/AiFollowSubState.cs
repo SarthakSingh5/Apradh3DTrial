@@ -4,14 +4,22 @@ public class AiFollowSubState : AiEngageSubState
 {
     public float maxDistance = 15f;
     public float minDistance = 4f;
+    public float followDuration = 0f;
+
     public virtual void Enter(Dog dog)
     {
         dog.npc.canMove = true;
+        followDuration = Random.Range(2f, 4f);
     }
 
     public virtual void Update(Dog dog)
     {
         GoToTarget(dog);
+        followDuration -= Time.deltaTime;
+        if (followDuration <= 0)
+        {
+            dog.npc.OnTaskComplete?.Invoke();
+        }
     }
 
     public virtual void Exit(Dog dog)
