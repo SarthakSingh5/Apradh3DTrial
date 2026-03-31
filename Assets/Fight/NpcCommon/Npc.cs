@@ -108,7 +108,10 @@ public class Npc : MonoBehaviour
 
     #endregion
 
+    
     public UnityAction OnTaskComplete;
+    
+    public bool canShoot=false;
 
 
 

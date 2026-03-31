@@ -19,6 +19,9 @@ public class Dog : AiController
     public Transform aimTarget;
     public Rig aimRig;
 
+    public AiWeaponStateMachine weaponMachine;
+    [HideInInspector] public AiFireDirector fireDirector;
+
 
     void Start()
     {
@@ -34,12 +37,20 @@ public class Dog : AiController
         stateMachine.RegisterState(new AiEngageTargetState());
         stateMachine.RegisterState(new AiCoverState());
         stateMachine.ChangeState(initialState);
+
+        weaponMachine = new AiWeaponStateMachine(this);
+        weaponMachine.RegisterState(new AiWeaponIdleState());
+        weaponMachine.RegisterState(new AiWeaponFireState());
+        weaponMachine.ChangeState(AiWeaponStateId.Idle);
+
+        fireDirector = GetComponent<AiFireDirector>();
     }
 
     protected override void Update()
     {
         base.Update();
         stateMachine.Update();
+        weaponMachine.Update();
         
     }
 }
