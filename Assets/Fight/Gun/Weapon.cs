@@ -10,6 +10,9 @@ public class Weapon : NpcComponent
     [SerializeField]
     Transform muzzle;
 
+    // Each AK-47 in the scene has its own private memory now.
+    private FireModeState state = new FireModeState();
+
     public override void SetNpc(Npc npc)
     {
         if (this.npc != null)
@@ -52,20 +55,20 @@ public class Weapon : NpcComponent
 
     public void PullTrigger()
     {
-        fireMode.OnTriggerPulled();
+        fireMode.OnTriggerPulled(state);
     }
 
     public void ReleaseTrigger()
     {
-        fireMode.OnTriggerReleased();
+        fireMode.OnTriggerReleased(state);
     }
 
     public void Update()
     {
-        if (fireMode.CanFire())
+        if (fireMode.CanFire(state))
         {
             shooter.Shoot(muzzle);
-            fireMode.OnFired();
+            fireMode.OnFired(state);
         }
     }
 }

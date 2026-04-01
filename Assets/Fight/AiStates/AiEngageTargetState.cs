@@ -8,7 +8,7 @@ public class AiEngageTargetState : AiState
 
     public void Enter(Dog dog)
     {
-        dog.npc.SetAim(true);
+        dog.npc.canShoot = true;
         // Initialize the sub-state machine when entering the state
         subFSM = new AiEngageSubStateMachine(dog);
         

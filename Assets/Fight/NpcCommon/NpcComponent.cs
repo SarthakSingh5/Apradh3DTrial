@@ -10,7 +10,7 @@ public class NpcComponent : MonoBehaviour
 	protected virtual void Awake()
 	{
 		SetNpc(GetComponentInParent<Npc>());
-		dog = GetComponentInChildren<Dog>();
+		dog = npc.GetComponentInChildren<Dog>();
 	}
 
 	public virtual void SetNpc(Npc npc)

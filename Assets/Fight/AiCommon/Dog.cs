@@ -30,6 +30,8 @@ public class Dog : AiController
         coverMovement = GetComponent<AiCoverMovement>();
         worldBounds = GetComponent<WorldBounds>();
         sensor = GetComponent<AiSensor>();
+        fireDirector = GetComponent<AiFireDirector>();
+        
         stateMachine = new AiStateMachine(this);
         stateMachine.RegisterState(new AiIdleState());
         stateMachine.RegisterState(new AiFindTargetState());
@@ -43,7 +45,6 @@ public class Dog : AiController
         weaponMachine.RegisterState(new AiWeaponFireState());
         weaponMachine.ChangeState(AiWeaponStateId.Idle);
 
-        fireDirector = GetComponent<AiFireDirector>();
     }
 
     protected override void Update()

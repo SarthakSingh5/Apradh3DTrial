@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ded3e0567c7f1a4f8d005673d5e6314, type: 3}
   m_Name: FireMode
   m_EditorClassIdentifier: 
-  rate: 0.3
-  nextFireTime: 20.087103
+  rate: 0.15
+  nextFireTime: 0

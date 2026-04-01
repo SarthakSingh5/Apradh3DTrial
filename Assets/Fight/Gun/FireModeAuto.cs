@@ -3,26 +3,16 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "FireMode", menuName = "Gun/FireMode/Auto")]
 public class FireModeAuto : FireMode
 {
-    bool isFiring;
+    public override void OnTriggerPulled(FireModeState state) => state.isFiring = true;
+    public override void OnTriggerReleased(FireModeState state) => state.isFiring = false;
 
-    public override void OnTriggerPulled()
+    public override bool CanFire(FireModeState state)
     {
-        isFiring = true; // Start firing when the trigger is pulled
+        return state.isFiring && Time.time >= state.nextFireTime;
     }
 
-    public override void OnTriggerReleased()
+    public override void OnFired(FireModeState state)
     {
-        isFiring = false; // Stop firing when the trigger is released
-    }
-
-    public override bool CanFire()
-    {
-        // Allow firing if the trigger is pulled and enough time has passed since the last shot
-        return isFiring && Time.time >= nextFireTime;
-    }
-
-    public override void OnFired()
-    {
-        nextFireTime = Time.time + rate; // Set the next fire time based on the rate
+        state.nextFireTime = Time.time + rate;
     }
 }

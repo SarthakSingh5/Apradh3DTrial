@@ -9,6 +9,7 @@ public class AiWeaponFireState : AiWeaponState
 
     public void Enter(Dog dog)
     {
+        dog.npc.SetAim(true);
         dog.fireDirector.StartDirector(dog);
     }
 

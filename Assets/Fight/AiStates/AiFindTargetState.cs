@@ -10,6 +10,7 @@ public class AiFindTargetState : AiState
         dog.npc.canMove = true; // Enable movement
         dog.npc.canTurn = true; // Enable turning
         dog.agent.speed = dog.config.walkSpeed; // Set the speed to walk speed
+        dog.npc.canShoot = false;
     }
 
     public void Update(Dog dog)

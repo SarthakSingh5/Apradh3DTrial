@@ -1,32 +1,42 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "FireMode", menuName = "Gun/FireMode/Semi")]
+[CreateAssetMenu(fileName = "FireModeSemi", menuName = "Gun/FireMode/Semi")]
 public class FireModeSemi : FireMode
 {
-    bool hasFired;
+    // Semi-auto requires a fresh pull for every shot.
+    // It uses 'hasFired' to ensure only one bullet per trigger press.
 
-    public override void OnTriggerPulled()
+    public override void OnTriggerPulled(FireModeState state)
     {
-        hasFired = false;
+        // When the trigger is first pulled, we allow a shot.
+        state.isFiring = true;
+        state.hasFired = false; 
     }
 
-    public override void OnTriggerReleased()
+    public override void OnTriggerReleased(FireModeState state)
     {
-        hasFired = true;
+        state.isFiring = false;
+        // Setting this to true ensures that even if CanFire is called, 
+        // it won't fire until the next Pull resets it.
+        state.hasFired = true; 
     }
 
-    public override bool CanFire()
+    public override bool CanFire(FireModeState state)
     {
-        if (hasFired == false && Time.time >= nextFireTime)
+        // Must be holding trigger, must NOT have fired yet for THIS pull, 
+        // and must be past the cooldown time.
+        if (state.isFiring && !state.hasFired && Time.time >= state.nextFireTime)
         {
-            nextFireTime = Time.time + rate; // Set the next fire time based on the rate
             return true;
         }
 
         return false;
     }
 
-    public override void OnFired()
+    public override void OnFired(FireModeState state)
     {
+        // Lock the gun for this trigger pull
+        state.hasFired = true; 
+        state.nextFireTime = Time.time + rate;
     }
 }
