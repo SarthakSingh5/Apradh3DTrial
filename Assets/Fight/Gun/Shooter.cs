@@ -55,6 +55,12 @@ public class Shooter : ScriptableObject
 
     #endregion
 
+    [Header("Audio")]
+    [SerializeField] public AudioClip shotSound; // The sound file
+    [SerializeField, Range(0, 1)] public float volume = 1f;
+    [SerializeField, Range(0, 1)] public float pitchRandomness = 0.05f;
+
+    
     public virtual void Shoot(Transform muzzle)
     {
         

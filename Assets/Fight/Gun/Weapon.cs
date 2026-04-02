@@ -13,6 +13,17 @@ public class Weapon : NpcComponent
     // Each AK-47 in the scene has its own private memory now.
     private FireModeState state = new FireModeState();
 
+    private AudioSource audioSource;
+
+    protected override void Awake()
+    {
+        base.Awake();
+        audioSource = GetComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 1.0f; // 1.0 makes it fully 3D
+    }
+
+
     public override void SetNpc(Npc npc)
     {
         if (this.npc != null)
@@ -69,6 +80,17 @@ public class Weapon : NpcComponent
         {
             shooter.Shoot(muzzle);
             fireMode.OnFired(state);
+            PlayShotSound();
+        }
+    }
+
+    void PlayShotSound()
+    {
+        if (shooter.shotSound != null)
+        {
+            // Randomize pitch slightly for a better feel
+            audioSource.pitch = 1.0f + Random.Range(-shooter.pitchRandomness, shooter.pitchRandomness);
+            audioSource.PlayOneShot(shooter.shotSound, shooter.volume);
         }
     }
 }

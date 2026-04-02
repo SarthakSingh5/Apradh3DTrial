@@ -27,3 +27,6 @@ MonoBehaviour:
   tracerPrefab: {fileID: 7320182504341720947, guid: da773cfbcdae2bf4ab56e295b26788f7, type: 3}
   tracerSpeed: 100
   tracerLifetime: 0.1
+  shotSound: {fileID: 8300000, guid: d1d08ebfa4c9c85428efb3dfbb5887c5, type: 3}
+  volume: 1
+  pitchRandomness: 0.05

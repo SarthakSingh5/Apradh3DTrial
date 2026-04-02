@@ -7,8 +7,8 @@ public class AiFireDirector : MonoBehaviour
     private Dog dog;
 
     [Header("Burst Settings")]
-    public float burstPauseMin = 1.5f;
-    public float burstPauseMax = 3.0f;
+    public float burstPauseMin = 3.0f;
+    public float burstPauseMax = 6.5f;
     public int minShotsPerBurst = 2;
     public int maxShotsPerBurst = 5;
 
@@ -55,22 +55,25 @@ public class AiFireDirector : MonoBehaviour
 
                 // Accuracy gets better as the burst progresses (RDR2 style)
                 float t = (shots > 1) ? (float)i / (shots - 1) : 1f;
-                float currentBloom = Mathf.Lerp(maxBloom, minBloom, t);
+                float directorBloom = Mathf.Lerp(maxBloom, minBloom, t);
 
-                FireBullet(currentBloom);
+                yield return StartCoroutine(FireBulletCoroutine(directorBloom));
 
                 // HUMAN CADENCE: Random time between bullets within the burst
-                yield return new WaitForSeconds(Random.Range(0.12f, 0.25f));
+                yield return new WaitForSeconds(Random.Range(0.1f, 0.3f));
             }
         }
     }
 
-    private void FireBullet(float bloom)
+    private IEnumerator FireBulletCoroutine(float directorBloom)
     {
-        // Directional log to keep things clean
-        Debug.Log($"<color=orange>Director:</color> Requesting shot with {bloom} bloom");
-        
-        // This triggers the mechanical shooter on the weapon
-        dog.npc.TryShoot?.Invoke(); 
+        // 1. Pull the trigger
+        dog.npc.TryShoot?.Invoke();
+
+        // 2. WAIT one frame! This allows Weapon.Update() to see 'isFiring = true'
+        yield return null;
+
+        // 3. Release the trigger
+        dog.npc.NotShoot?.Invoke();
     }
 }
