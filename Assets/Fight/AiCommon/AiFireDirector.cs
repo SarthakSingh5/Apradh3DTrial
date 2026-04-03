@@ -67,6 +67,8 @@ public class AiFireDirector : MonoBehaviour
 
     private IEnumerator FireBulletCoroutine(float directorBloom)
     {
+        // This respects physics (if moving fast) but forces the 'Director Miss'.
+        dog.npc.currentBloom = Mathf.Max(dog.npc.currentBloom, directorBloom);
         // 1. Pull the trigger
         dog.npc.TryShoot?.Invoke();
 

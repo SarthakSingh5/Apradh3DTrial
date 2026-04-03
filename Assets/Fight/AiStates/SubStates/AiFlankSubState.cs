@@ -26,7 +26,6 @@ public class AiFlankSubState : AiFollowSubState
         // RULE: Flank is 'Done' as soon as we arrive at the side
         if (!dog.agent.pathPending && dog.agent.remainingDistance <= dog.agent.stoppingDistance+0.5f)
         {
-            Debug.Log("Flank complete");
             dog.npc.OnTaskComplete?.Invoke();
         }
     }
@@ -52,7 +51,6 @@ public class AiFlankSubState : AiFollowSubState
         direction = Quaternion.Euler(0f, randomAngle, 0f) * direction;
         Vector3 destination = dog.targeting.TargetPosition + direction * randomRadius;
 
-        Debug.Log($"Flanking to {destination}");
         dog.npc.canMove = true;
         dog.npc.SetDestination?.Invoke(destination);
     }

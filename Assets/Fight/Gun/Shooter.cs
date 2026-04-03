@@ -60,8 +60,12 @@ public class Shooter : ScriptableObject
     [SerializeField, Range(0, 1)] public float volume = 1f;
     [SerializeField, Range(0, 1)] public float pitchRandomness = 0.05f;
 
+
+    // High multiplier (e.g., 20) means 2.0 bloom = 40 degrees of error
+    [SerializeField] protected float spreadMultiplier = 2f;
+
     
-    public virtual void Shoot(Transform muzzle)
+    public virtual void Shoot(Transform muzzle, float bloom)
     {
         
 

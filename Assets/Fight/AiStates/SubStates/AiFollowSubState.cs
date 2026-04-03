@@ -8,7 +8,6 @@ public class AiFollowSubState : AiEngageSubState
 
     public virtual void Enter(Dog dog)
     {
-        Debug.Log("Entering Follow SubState");
         dog.npc.canMove = true;
         followDuration = Random.Range(2f, 4f);
     }
@@ -19,7 +18,6 @@ public class AiFollowSubState : AiEngageSubState
         followDuration -= Time.deltaTime;
         if (followDuration <= 0)
         {
-            Debug.Log("Follow duration complete");
             dog.npc.OnTaskComplete?.Invoke();
         }
     }

@@ -74,6 +74,18 @@ public partial class PlayerController : NpcController
     void OnAttack(InputValue input)
     {
         attacking = input.isPressed;
+
+        if (npc.Alive)
+        {
+            if (attacking)
+            {
+                npc.TryShoot?.Invoke();
+            }
+            else
+            {
+                npc.NotShoot?.Invoke();
+            }
+        }
     }
 
     void OnLook(InputValue input)
@@ -145,14 +157,6 @@ public partial class PlayerController : NpcController
 
         if (npc.Alive)
         {
-            if (attacking)
-            {
-                npc.TryShoot?.Invoke();
-            }
-            else
-            {
-                npc.NotShoot?.Invoke();
-            }
 
             UpdateAiming();
 

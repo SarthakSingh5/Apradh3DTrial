@@ -30,3 +30,4 @@ MonoBehaviour:
   shotSound: {fileID: 8300000, guid: d1d08ebfa4c9c85428efb3dfbb5887c5, type: 3}
   volume: 1
   pitchRandomness: 0.05
+  spreadMultiplier: 5

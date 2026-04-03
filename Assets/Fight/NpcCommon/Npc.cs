@@ -50,7 +50,7 @@ public class Npc : MonoBehaviour
     /// Returns true if looking at point in world space.
     /// </summary>
     public System.Func<Vector3, bool> IsLookingAt;
-    
+
 
 
     #endregion
@@ -108,10 +108,14 @@ public class Npc : MonoBehaviour
 
     #endregion
 
-    
+
     public UnityAction OnTaskComplete;
-    
-    public bool canShoot=false;
+
+    public bool canShoot = false;
+
+
+    private Vector3 lastVelocity;
+    public float currentBloom;
 
 
 
@@ -131,7 +135,7 @@ public class Npc : MonoBehaviour
 
     private void Update()
     {
-        
+        CalculateDynamicBloom();
     }
 
 
@@ -143,5 +147,28 @@ public class Npc : MonoBehaviour
         {
             direction = horizontalVelocity.normalized;
         }
+    }
+
+    private void CalculateDynamicBloom()
+    {
+        // 1. Instability (Speed)
+        float speed = new Vector3(velocity.x, 0, velocity.z).magnitude;
+        float velocityBloom = speed * 0.1f;
+
+        // 2. Jerk (Acceleration) - Note: npc.velocity should just be velocity
+        Vector3 acceleration = (velocity - lastVelocity) / Time.deltaTime;
+        float jerkBloom = acceleration.magnitude * 0.05f;
+
+        // 3. Update the state
+        currentBloom += jerkBloom;
+
+        // 4. Recovery
+        currentBloom = Mathf.Lerp(currentBloom, velocityBloom, Time.deltaTime * 5f);
+
+        lastVelocity = velocity;
+
+        // 5. Clamp it! 
+        // This ensures neither the Physics nor the Director push it too far.
+        currentBloom = Mathf.Clamp(currentBloom, 0f, 2.0f);
     }
 }

@@ -78,7 +78,7 @@ public class Weapon : NpcComponent
     {
         if (fireMode.CanFire(state))
         {
-            shooter.Shoot(muzzle);
+            shooter.Shoot(muzzle,npc.currentBloom);
             fireMode.OnFired(state);
             PlayShotSound();
         }
@@ -93,4 +93,42 @@ public class Weapon : NpcComponent
             audioSource.PlayOneShot(shooter.shotSound, shooter.volume);
         }
     }
+
+    private void OnDrawGizmos()
+{
+    if (muzzle == null || npc == null) return;
+
+    // 1. Set the color (Red for inaccurate, Green for perfect)
+    float colorAlpha = Mathf.InverseLerp(0f, 2.0f, npc.currentBloom);
+    Gizmos.color = Color.Lerp(Color.green, Color.red, colorAlpha);
+
+    // 2. Project a point forward to show the center of aim
+    Vector3 centerPoint = muzzle.position + muzzle.forward * 5f; // 5 meters ahead
+    Gizmos.DrawLine(muzzle.position, centerPoint);
+
+    // 3. Draw the "Circle of Error" at that distance
+    // The radius is proportional to our currentBloom
+    float radius = npc.currentBloom * 1.2f; 
+    
+    // Draw a wire circle using a helper loop
+    DrawGizmoCircle(centerPoint, muzzle.forward, radius);
+}
+
+private void DrawGizmoCircle(Vector3 center, Vector3 normal, float radius)
+{
+    Vector3 up = Vector3.up;
+    if (Mathf.Abs(Vector3.Dot(normal, up)) > 0.99f) up = Vector3.right;
+    
+    Vector3 right = Vector3.Cross(normal, up).normalized;
+    Vector3 circleUp = Vector3.Cross(right, normal).normalized;
+
+    Vector3 lastPoint = center + right * radius;
+    for (int i = 1; i <= 32; i++)
+    {
+        float angle = i / 32f * Mathf.PI * 2f;
+        Vector3 nextPoint = center + (right * Mathf.Cos(angle) + circleUp * Mathf.Sin(angle)) * radius;
+        Gizmos.DrawLine(lastPoint, nextPoint);
+        lastPoint = nextPoint;
+    }
+}
 }

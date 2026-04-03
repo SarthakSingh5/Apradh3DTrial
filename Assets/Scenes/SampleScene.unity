@@ -16135,6 +16135,10 @@ PrefabInstance:
       propertyPath: CameraTarget
       value: 
       objectReference: {fileID: 1733529894}
+    - target: {fileID: 1388714327047726556, guid: 1bd586eeb37a0704e97a742f3b4c08b2, type: 3}
+      propertyPath: fireMode
+      value: 
+      objectReference: {fileID: 11400000, guid: d39a420ce004fec46b2e15eb55568763, type: 2}
     - target: {fileID: 1935503768414635100, guid: 1bd586eeb37a0704e97a742f3b4c08b2, type: 3}
       propertyPath: m_Name
       value: NPC (1)
@@ -44406,6 +44410,7 @@ MonoBehaviour:
   shooter: {fileID: 0}
   carryingGun: 1
   canShoot: 0
+  currentBloom: 0
 --- !u!4 &6084608755534852353
 Transform:
   m_ObjectHideFlags: 0
@@ -61904,6 +61909,7 @@ MonoBehaviour:
   shooter: {fileID: 0}
   carryingGun: 1
   canShoot: 0
+  currentBloom: 0
 --- !u!114 &9146870012795568023
 MonoBehaviour:
   m_ObjectHideFlags: 0

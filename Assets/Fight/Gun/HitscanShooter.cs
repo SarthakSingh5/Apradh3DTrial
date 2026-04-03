@@ -9,9 +9,9 @@ public class HitscanShooter : Shooter
 {
 
 
-	public override void Shoot(Transform muzzle)
+	public override void Shoot(Transform muzzle, float bloom)
 	{
-		base.Shoot(muzzle);
+		base.Shoot(muzzle, bloom);
 		SpawnHitScanProjectile(muzzle);
 	}
 
