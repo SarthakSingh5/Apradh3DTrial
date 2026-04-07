@@ -118,6 +118,9 @@ public class Npc : MonoBehaviour
     public float currentBloom;
 
 
+    public bool isPanicking = false;
+
+
 
 
     protected void Awake()

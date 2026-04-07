@@ -2,8 +2,8 @@ using UnityEngine;
 using UnityEngine.AI;
 public class AiFollowSubState : AiEngageSubState
 {
-    public float maxDistance = 15f;
-    public float minDistance = 4f;
+    public float maxDistance = 20f;
+    public float minDistance = 8f;
     public float followDuration = 0f;
 
     public virtual void Enter(Dog dog)
@@ -30,6 +30,8 @@ public class AiFollowSubState : AiEngageSubState
     {
         float distance = dog.targeting.TargetDistance;
         UpdateSpeed(dog, distance);
+
+        dog.npc.isPanicking = distance <= minDistance;
 
         if (distance <= maxDistance)
         {

@@ -60,6 +60,8 @@ public class AiFlankSubState : AiFollowSubState
         float distance = dog.targeting.TargetDistance;
         UpdateSpeed(dog, distance);
 
+        dog.npc.isPanicking = distance <= minDistance;
+
         if (distance <= maxDistance && distance >= minDistance)
         {
             MoveToFlank(dog);

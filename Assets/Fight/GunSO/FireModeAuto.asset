@@ -10,6 +10,6 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5ded3e0567c7f1a4f8d005673d5e6314, type: 3}
-  m_Name: FireMode
+  m_Name: FireModeAuto
   m_EditorClassIdentifier: 
-  rate: 0.1
+  rate: 0.08

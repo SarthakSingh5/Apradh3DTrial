@@ -5,6 +5,7 @@ public class Weapon : NpcComponent
     [SerializeField]
     Shooter shooter;
     [SerializeField]
+    public
     FireMode fireMode;
 
     [SerializeField]

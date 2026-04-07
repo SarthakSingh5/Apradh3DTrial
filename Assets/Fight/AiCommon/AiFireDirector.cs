@@ -9,8 +9,8 @@ public class AiFireDirector : MonoBehaviour
     [Header("Burst Settings")]
     public float burstPauseMin = 3.0f;
     public float burstPauseMax = 6.5f;
-    public int minShotsPerBurst = 2;
-    public int maxShotsPerBurst = 5;
+    public int minShotsPerBurst = 1;
+    public int maxShotsPerBurst = 9;
 
     [Header("Accuracy Bloom")]
     public float maxBloom = 1.5f; // First shot misses
@@ -36,31 +36,43 @@ public class AiFireDirector : MonoBehaviour
     {
         while (true)
         {
-            // 1. GATEKEEPER: Only shoot if the variable allows it AND target is seen
             if (!dog.npc.canShoot || !dog.targeting.TargetInSight)
             {
                 yield return null;
                 continue;
             }
 
-            // 2. PAUSE BETWEEN BURSTS (The player's window to move)
-            yield return new WaitForSeconds(Random.Range(burstPauseMin, burstPauseMax));
+            // 1. THE HUMAN BREATH
+            // If panicking, the AI is aggressive and pauses less.
+            float pause = dog.npc.isPanicking ? 1.0f : Random.Range(burstPauseMin, burstPauseMax);
+            yield return new WaitForSeconds(pause);
 
-            // 3. START BURST
-            int shots = Random.Range(minShotsPerBurst, maxShotsPerBurst + 1);
+            // 2. THE BURST SIZE
+            // If panicking, dump 30 rounds. If calm, use your 2-5 or 9-15 range.
+            int shots = dog.npc.isPanicking ? 30 : Random.Range(minShotsPerBurst, maxShotsPerBurst + 1);
+
             for (int i = 0; i < shots; i++)
             {
-                // Stop mid-burst if we lose permission (e.g. ducked into cover or target lost)
                 if (!dog.npc.canShoot || !dog.targeting.TargetInSight) break;
 
-                // Accuracy gets better as the burst progresses (RDR2 style)
+                // --- THE DYNAMIC EXIT RULE ---
+                // If we started as a PANIC burst (30 shots) but the target got away...
+                // AND we have already fired at least 5 shots...
+                // STOP firing and go back to the 'Big Breath' pause.
+                if (shots > maxShotsPerBurst && !dog.npc.isPanicking && i >= 5)
+                {
+                    break;
+                }
+
+                // 3. YOUR EXACT BLOOM LOGIC
                 float t = (shots > 1) ? (float)i / (shots - 1) : 1f;
                 float directorBloom = Mathf.Lerp(maxBloom, minBloom, t);
 
                 yield return StartCoroutine(FireBulletCoroutine(directorBloom));
 
-                // HUMAN CADENCE: Random time between bullets within the burst
-                yield return new WaitForSeconds(Random.Range(0.1f, 0.3f));
+                // 4. THE WEAPON RATE
+                // No extra random delay here! Just the mechanical speed of the gun.
+                yield return new WaitForSeconds(dog.weapon.fireMode.rate);
             }
         }
     }
