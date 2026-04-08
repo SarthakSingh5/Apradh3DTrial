@@ -72,7 +72,7 @@ public class AiFireDirector : MonoBehaviour
 
                 // 4. THE WEAPON RATE
                 // No extra random delay here! Just the mechanical speed of the gun.
-                yield return new WaitForSeconds(dog.weapon.fireMode.rate);
+                yield return new WaitForSeconds(dog.npc.weapon.fireMode.rate);
             }
         }
     }

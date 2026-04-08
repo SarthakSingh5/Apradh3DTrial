@@ -3,6 +3,7 @@ using UnityEngine;
 public class Weapon : NpcComponent
 {
     [SerializeField]
+    public
     Shooter shooter;
     [SerializeField]
     public
@@ -79,6 +80,7 @@ public class Weapon : NpcComponent
     {
         if (fireMode.CanFire(state))
         {
+            npc.AddRecoilBloom();
             shooter.Shoot(muzzle,npc.currentBloom);
             fireMode.OnFired(state);
             PlayShotSound();

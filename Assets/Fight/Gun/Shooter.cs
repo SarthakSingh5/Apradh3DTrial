@@ -64,6 +64,10 @@ public class Shooter : ScriptableObject
     // High multiplier (e.g., 20) means 2.0 bloom = 40 degrees of error
     [SerializeField] protected float spreadMultiplier = 2f;
 
+    [Header("Recoil Bloom Stats")]
+    public float bloomPerShot = 0.15f;
+    public float bloomRecoveryRate = 8f;
+
     
     public virtual void Shoot(Transform muzzle, float bloom)
     {

@@ -116,9 +116,13 @@ public class Npc : MonoBehaviour
 
     private Vector3 lastVelocity;
     public float currentBloom;
+    private float recoilBloom;
 
 
     public bool isPanicking = false;
+
+    [Header("Weapon System")]
+    public Weapon weapon; // Centralized reference
 
 
 
@@ -133,6 +137,11 @@ public class Npc : MonoBehaviour
         if (anim == null)
         {
             Debug.LogError($"Animator not found on '{gameObject.name}'");
+        }
+
+        if (weapon == null)
+        {
+            weapon = GetComponentInChildren<Weapon>();
         }
     }
 
@@ -152,26 +161,46 @@ public class Npc : MonoBehaviour
         }
     }
 
+    public void AddRecoilBloom()
+    {
+        if (weapon != null)
+        {
+            // Pulling stats directly from the weapon (Shooter)
+            recoilBloom += weapon.shooter.bloomPerShot;
+        }
+    }
+
     private void CalculateDynamicBloom()
     {
+        // 0. Safety Check for Weapon Stats
+        float recoveryRate = (weapon != null) ? weapon.shooter.bloomRecoveryRate : 5f;
+
         // 1. Instability (Speed)
         float speed = new Vector3(velocity.x, 0, velocity.z).magnitude;
         float velocityBloom = speed * 0.1f;
 
-        // 2. Jerk (Acceleration) - Note: npc.velocity should just be velocity
+        // 2. Jerk (Acceleration)
         Vector3 acceleration = (velocity - lastVelocity) / Time.deltaTime;
         float jerkBloom = acceleration.magnitude * 0.05f;
 
-        // 3. Update the state
-        currentBloom += jerkBloom;
+        // 3. RECOIL BLOOM LOGIC
+        // This moves the heat back to 0 based on the weapon's recovery rate
+        recoilBloom = Mathf.MoveTowards(recoilBloom, 0f, Time.deltaTime * recoveryRate);
 
-        // 4. Recovery
-        currentBloom = Mathf.Lerp(currentBloom, velocityBloom, Time.deltaTime * 5f);
+        // 4. Update the state
+        // We add jerk and recoil heat to the existing bloom
+        currentBloom += (jerkBloom); 
+
+        // 5. Recovery & Combination
+        // We Lerp the total bloom toward the current velocity-based baseline + heat
+        float targetBloom = velocityBloom + recoilBloom;
+        currentBloom = Mathf.Lerp(currentBloom, targetBloom, Time.deltaTime * 5f);
 
         lastVelocity = velocity;
 
-        // 5. Clamp it! 
-        // This ensures neither the Physics nor the Director push it too far.
-        currentBloom = Mathf.Clamp(currentBloom, 0f, 2.0f);
+        // 6. Clamp it!
+        // Increased max clamp to 3.0 to allow for heavy recoil sprays
+        currentBloom = Mathf.Clamp(currentBloom, 0f, 3.0f);
     }
+
 }
