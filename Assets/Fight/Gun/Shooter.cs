@@ -65,7 +65,7 @@ public class Shooter : ScriptableObject
     [SerializeField] protected float spreadMultiplier = 2f;
 
     [Header("Recoil Bloom Stats")]
-    public float bloomPerShot = 0.15f;
+    public float bloomPerShot = 0.5f;
     public float bloomRecoveryRate = 8f;
 
     

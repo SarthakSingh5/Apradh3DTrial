@@ -31,3 +31,5 @@ MonoBehaviour:
   volume: 1
   pitchRandomness: 0.05
   spreadMultiplier: 5
+  bloomPerShot: 0.7
+  bloomRecoveryRate: 8

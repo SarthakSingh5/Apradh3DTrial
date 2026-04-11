@@ -116,7 +116,7 @@ public class Npc : MonoBehaviour
 
     private Vector3 lastVelocity;
     public float currentBloom;
-    private float recoilBloom;
+    public float recoilBloom;
 
 
     public bool isPanicking = false;

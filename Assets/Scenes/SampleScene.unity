@@ -366,7 +366,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   npc: {fileID: 0}
   dog: {fileID: 0}
-  weapon: {fileID: 0}
   shooter: {fileID: 11400000, guid: 15b94281dd9a7bd46a3acb2bfe71886b, type: 2}
   fireMode: {fileID: 11400000, guid: 160bac22d35cbc246b7d22e3f80c3690, type: 2}
   muzzle: {fileID: 1198188049}
@@ -15603,7 +15602,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   npc: {fileID: 0}
   dog: {fileID: 0}
-  weapon: {fileID: 0}
   agent: {fileID: 0}
   initialState: 2
   config: {fileID: 11400000, guid: 7547a339423d39847adbbed754087a27, type: 2}
@@ -15709,7 +15707,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   npc: {fileID: 0}
   dog: {fileID: 0}
-  weapon: {fileID: 0}
 --- !u!114 &622645047
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -31628,7 +31625,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   npc: {fileID: 0}
   dog: {fileID: 0}
-  weapon: {fileID: 0}
   shooter: {fileID: 11400000, guid: 15b94281dd9a7bd46a3acb2bfe71886b, type: 2}
   fireMode: {fileID: 11400000, guid: 160bac22d35cbc246b7d22e3f80c3690, type: 2}
   muzzle: {fileID: 1762393057}
@@ -33753,7 +33749,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   npc: {fileID: 0}
   dog: {fileID: 0}
-  weapon: {fileID: 0}
   points: 100
   maxPoints: 100
 --- !u!1 &1118366992736888627
@@ -33817,7 +33812,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   npc: {fileID: 6005950453189346739}
   dog: {fileID: 0}
-  weapon: {fileID: 0}
   RagdollRoot: {fileID: 1524287740619828}
   RagdollColliders:
   - {fileID: 7062411726641643374}
@@ -34315,7 +34309,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   npc: {fileID: 0}
   dog: {fileID: 0}
-  weapon: {fileID: 0}
 --- !u!1001 &1518059981211302620
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -37487,7 +37480,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   npc: {fileID: 0}
   dog: {fileID: 0}
-  weapon: {fileID: 0}
 --- !u!4 &4513312162426088212
 Transform:
   m_ObjectHideFlags: 0
@@ -38120,7 +38112,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   npc: {fileID: 0}
   dog: {fileID: 0}
-  weapon: {fileID: 0}
   shooter: {fileID: 11400000, guid: 15b94281dd9a7bd46a3acb2bfe71886b, type: 2}
   fireMode: {fileID: 11400000, guid: 160bac22d35cbc246b7d22e3f80c3690, type: 2}
   muzzle: {fileID: 8291857607588450288}
@@ -38440,7 +38431,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   npc: {fileID: 6005950453189346739}
   dog: {fileID: 0}
-  weapon: {fileID: 0}
   turnSpeed: 1000
   expireTime: 0.2
   animatorTurnSmoothing: 5
@@ -44274,7 +44264,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   npc: {fileID: 0}
   dog: {fileID: 0}
-  weapon: {fileID: 0}
   CameraFollow: {fileID: 64870167}
   CameraAimSmoothness: 5
   CamShoulderOffset: {x: 0, y: 0, z: 0}
@@ -44422,7 +44411,9 @@ MonoBehaviour:
   carryingGun: 1
   canShoot: 0
   currentBloom: 0
+  recoilBloom: 0
   isPanicking: 0
+  weapon: {fileID: 0}
 --- !u!4 &6084608755534852353
 Transform:
   m_ObjectHideFlags: 0
@@ -61922,7 +61913,9 @@ MonoBehaviour:
   carryingGun: 1
   canShoot: 0
   currentBloom: 0
+  recoilBloom: 0
   isPanicking: 0
+  weapon: {fileID: 0}
 --- !u!114 &9146870012795568023
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -61952,7 +61945,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   npc: {fileID: 0}
   dog: {fileID: 0}
-  weapon: {fileID: 0}
 --- !u!114 &9146870012795568029
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -61967,7 +61959,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   npc: {fileID: 0}
   dog: {fileID: 0}
-  weapon: {fileID: 0}
 --- !u!143 &9146870012795568030
 CharacterController:
   m_ObjectHideFlags: 0
@@ -62007,7 +61998,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   npc: {fileID: 9146870012795568022}
   dog: {fileID: 622645039}
-  weapon: {fileID: 0}
   RagdollRoot: {fileID: 4595128113104245030}
   RagdollColliders:
   - {fileID: 1990834155388849844}
@@ -62047,7 +62037,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   npc: {fileID: 0}
   dog: {fileID: 0}
-  weapon: {fileID: 0}
   points: 100
   maxPoints: 100
 --- !u!114 &9146870012795568033
@@ -62064,7 +62053,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   npc: {fileID: 9146870012795568022}
   dog: {fileID: 622645039}
-  weapon: {fileID: 0}
   turnSpeed: 1000
   expireTime: 0.2
   animatorTurnSmoothing: 5
