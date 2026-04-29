@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class Weapon : NpcComponent
 {
@@ -13,9 +14,11 @@ public class Weapon : NpcComponent
     Transform muzzle;
 
     // Each AK-47 in the scene has its own private memory now.
-    private FireModeState state = new FireModeState();
+    public FireModeState state = new FireModeState();
 
     private AudioSource audioSource;
+
+    private Coroutine reloadCoroutine;
 
     protected override void Awake()
     {
@@ -33,6 +36,7 @@ public class Weapon : NpcComponent
             this.npc.TryShoot -= TryShoot;
             this.npc.NotShoot -= NotShoot;
             this.npc.LookAt -= OnLookAt;
+            this.npc.TryReload -= OnReload;
         }
 
         base.SetNpc(npc);
@@ -42,7 +46,7 @@ public class Weapon : NpcComponent
             npc.TryShoot += TryShoot;
             npc.NotShoot += NotShoot;
             npc.LookAt += OnLookAt;
-
+            npc.TryReload += OnReload;
         }
     }
 
@@ -66,6 +70,18 @@ public class Weapon : NpcComponent
         muzzle.forward = target - muzzle.position;
     }
 
+    void OnReload()
+    {
+        if (state.isReloading || state.currAmmo == shooter.magSize) return;
+
+        // Lock the gun logic
+        state.isReloading = true;
+        npc.SetReload(true);
+
+        // Play the animation
+        npc.anim.SetTrigger("Reload");
+    }
+
     public void PullTrigger()
     {
         fireMode.OnTriggerPulled(state);
@@ -76,62 +92,100 @@ public class Weapon : NpcComponent
         fireMode.OnTriggerReleased(state);
     }
 
-    public void Update()
+    void Start()
     {
-        if (fireMode.CanFire(state))
+        // Ensure the gun starts with a full magazine
+        if (shooter != null)
         {
-            npc.AddRecoilBloom();
-            shooter.Shoot(muzzle,npc.currentBloom);
-            fireMode.OnFired(state);
-            PlayShotSound();
+            state.currAmmo = shooter.magSize;
         }
     }
 
-    void PlayShotSound()
+    public void Update()
     {
-        if (shooter.shotSound != null)
+        if (state.isReloading) return;
+        if (state.currAmmo <= 0)
         {
-            // Randomize pitch slightly for a better feel
+            OnReload();
+        }
+        if (fireMode.CanFire(state))
+        {
+            npc.AddRecoilBloom();
+            shooter.Shoot(muzzle, npc.currentBloom);
+            fireMode.OnFired(state);
+            PlayWeaponSound(shooter.shotSound);
+        }
+    }
+
+    public void OnMagOut()
+    {
+        PlayWeaponSound(shooter.magOutSound);
+    }
+
+    public void OnMagIn()
+    {
+        PlayWeaponSound(shooter.magInSound);
+    }
+
+    public void OnReleaseSlide()
+    {
+        PlayWeaponSound(shooter.releaseSlideSound);
+    }
+
+    public void OnWeaponReloaded()
+    {
+        state.currAmmo = shooter.magSize;
+        state.isReloading = false;
+        npc.SetReload(false);
+
+        Debug.Log("Reload logic finished via Animation Event!");
+    }
+
+    private void PlayWeaponSound(AudioClip clip)
+    {
+        if (clip != null && audioSource != null)
+        {
+            // Keep the variety by using the same pitch randomness as your shots
             audioSource.pitch = 1.0f + Random.Range(-shooter.pitchRandomness, shooter.pitchRandomness);
-            audioSource.PlayOneShot(shooter.shotSound, shooter.volume);
+            audioSource.PlayOneShot(clip, shooter.volume);
         }
     }
 
     private void OnDrawGizmos()
-{
-    if (muzzle == null || npc == null) return;
-
-    // 1. Set the color (Red for inaccurate, Green for perfect)
-    float colorAlpha = Mathf.InverseLerp(0f, 2.0f, npc.currentBloom);
-    Gizmos.color = Color.Lerp(Color.green, Color.red, colorAlpha);
-
-    // 2. Project a point forward to show the center of aim
-    Vector3 centerPoint = muzzle.position + muzzle.forward * 5f; // 5 meters ahead
-    Gizmos.DrawLine(muzzle.position, centerPoint);
-
-    // 3. Draw the "Circle of Error" at that distance
-    // The radius is proportional to our currentBloom
-    float radius = npc.currentBloom * 1.2f; 
-    
-    // Draw a wire circle using a helper loop
-    DrawGizmoCircle(centerPoint, muzzle.forward, radius);
-}
-
-private void DrawGizmoCircle(Vector3 center, Vector3 normal, float radius)
-{
-    Vector3 up = Vector3.up;
-    if (Mathf.Abs(Vector3.Dot(normal, up)) > 0.99f) up = Vector3.right;
-    
-    Vector3 right = Vector3.Cross(normal, up).normalized;
-    Vector3 circleUp = Vector3.Cross(right, normal).normalized;
-
-    Vector3 lastPoint = center + right * radius;
-    for (int i = 1; i <= 32; i++)
     {
-        float angle = i / 32f * Mathf.PI * 2f;
-        Vector3 nextPoint = center + (right * Mathf.Cos(angle) + circleUp * Mathf.Sin(angle)) * radius;
-        Gizmos.DrawLine(lastPoint, nextPoint);
-        lastPoint = nextPoint;
+        if (muzzle == null || npc == null) return;
+
+        // 1. Set the color (Red for inaccurate, Green for perfect)
+        float colorAlpha = Mathf.InverseLerp(0f, 2.0f, npc.currentBloom);
+        Gizmos.color = Color.Lerp(Color.green, Color.red, colorAlpha);
+
+        // 2. Project a point forward to show the center of aim
+        Vector3 centerPoint = muzzle.position + muzzle.forward * 5f; // 5 meters ahead
+        Gizmos.DrawLine(muzzle.position, centerPoint);
+
+        // 3. Draw the "Circle of Error" at that distance
+        // The radius is proportional to our currentBloom
+        float radius = npc.currentBloom * 1.2f;
+
+        // Draw a wire circle using a helper loop
+        DrawGizmoCircle(centerPoint, muzzle.forward, radius);
     }
-}
+
+    private void DrawGizmoCircle(Vector3 center, Vector3 normal, float radius)
+    {
+        Vector3 up = Vector3.up;
+        if (Mathf.Abs(Vector3.Dot(normal, up)) > 0.99f) up = Vector3.right;
+
+        Vector3 right = Vector3.Cross(normal, up).normalized;
+        Vector3 circleUp = Vector3.Cross(right, normal).normalized;
+
+        Vector3 lastPoint = center + right * radius;
+        for (int i = 1; i <= 32; i++)
+        {
+            float angle = i / 32f * Mathf.PI * 2f;
+            Vector3 nextPoint = center + (right * Mathf.Cos(angle) + circleUp * Mathf.Sin(angle)) * radius;
+            Gizmos.DrawLine(lastPoint, nextPoint);
+            lastPoint = nextPoint;
+        }
+    }
 }

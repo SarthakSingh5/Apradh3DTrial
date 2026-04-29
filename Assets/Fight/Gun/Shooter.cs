@@ -56,7 +56,10 @@ public class Shooter : ScriptableObject
     #endregion
 
     [Header("Audio")]
-    [SerializeField] public AudioClip shotSound; // The sound file
+    [SerializeField] public AudioClip shotSound;
+    [SerializeField] public AudioClip magOutSound;
+    [SerializeField] public AudioClip magInSound;
+    [SerializeField] public AudioClip releaseSlideSound;
     [SerializeField, Range(0, 1)] public float volume = 1f;
     [SerializeField, Range(0, 1)] public float pitchRandomness = 0.05f;
 
@@ -67,6 +70,9 @@ public class Shooter : ScriptableObject
     [Header("Recoil Bloom Stats")]
     public float bloomPerShot = 0.5f;
     public float bloomRecoveryRate = 8f;
+
+    public float reloadDuration = 2f;
+    public int magSize = 30;
 
     
     public virtual void Shoot(Transform muzzle, float bloom)

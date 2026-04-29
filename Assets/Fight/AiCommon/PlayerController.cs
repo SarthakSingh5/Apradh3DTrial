@@ -98,6 +98,14 @@ public partial class PlayerController : NpcController
         RunInput = input.isPressed;
     }
 
+    void OnReload(InputValue input)
+    {
+        if(npc.Alive)
+        {
+            npc.TryReload?.Invoke();
+        }
+    }
+
     #endregion
 
 

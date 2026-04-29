@@ -102,9 +102,27 @@ public class Npc : MonoBehaviour
 
     public bool Aiming => aiming;
 
+    private bool reloading = false;
+
+    public void SetReload(bool reload)
+    {
+        if (carryingGun)
+        {
+            this.reloading = reload;
+        }
+        else
+        {
+            this.reloading = false;
+        }
+    }
+
+    public bool Reloading => reloading;
+
 
     public UnityAction TryShoot;
     public UnityAction NotShoot;
+
+    public UnityAction TryReload;
 
     #endregion
 
@@ -123,6 +141,11 @@ public class Npc : MonoBehaviour
 
     [Header("Weapon System")]
     public Weapon weapon; // Centralized reference
+
+    public void MagOut() => weapon?.OnMagOut();
+    public void MagIn() => weapon?.OnMagIn();
+    public void ReleaseSlide() => weapon?.OnReleaseSlide();
+    public void WeaponReloaded() => weapon?.OnWeaponReloaded();
 
 
 

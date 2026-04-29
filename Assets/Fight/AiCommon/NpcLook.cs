@@ -37,7 +37,7 @@ public class NpcLook : NpcComponent
     #region Rig Manipulation Methods
     void UpdateArmRigs()
     {
-        if (npc.Aiming && npc.carryingGun)
+        if (npc.Aiming && npc.carryingGun && !npc.Reloading)
         {
             RArmRig.weight = 1f;
             LArmRig.weight = 1f;

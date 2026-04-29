@@ -22,9 +22,6 @@ public class NpcAnimator : NpcComponent
 
         npc.anim.SetBool("Aim", npc.Aiming);
 
-        
-
-
     }
 
 }

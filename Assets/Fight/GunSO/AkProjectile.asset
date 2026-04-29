@@ -28,8 +28,13 @@ MonoBehaviour:
   tracerSpeed: 100
   tracerLifetime: 0.1
   shotSound: {fileID: 8300000, guid: d1d08ebfa4c9c85428efb3dfbb5887c5, type: 3}
+  magOutSound: {fileID: 8300000, guid: 1aed76bf288c2ca4e89b24dd942d4b70, type: 3}
+  magInSound: {fileID: 8300000, guid: 29ff97669552f694381b4a72b47de684, type: 3}
+  releaseSlideSound: {fileID: 8300000, guid: 10d9312ce26cb394381649fa48f4330b, type: 3}
   volume: 1
   pitchRandomness: 0.05
   spreadMultiplier: 5
   bloomPerShot: 0.7
   bloomRecoveryRate: 8
+  reloadDuration: 2
+  magSize: 30

@@ -23,6 +23,9 @@ public class FireModeSemi : FireMode
 
     public override bool CanFire(FireModeState state)
     {
+        // ADDITION: Check for ammo and reloading status
+        if (state.currAmmo <= 0 || state.isReloading) 
+            return false;
         // Must be holding trigger, must NOT have fired yet for THIS pull, 
         // and must be past the cooldown time.
         if (state.isFiring && !state.hasFired && Time.time >= state.nextFireTime)
@@ -35,6 +38,8 @@ public class FireModeSemi : FireMode
 
     public override void OnFired(FireModeState state)
     {
+        // Reduce ammo count
+        state.currAmmo--;
         // Lock the gun for this trigger pull
         state.hasFired = true; 
         state.nextFireTime = Time.time + rate;
