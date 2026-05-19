@@ -37,6 +37,15 @@ public partial class PlayerController : NpcController
 
     bool inputEnabled = true;
 
+    #region Recoil Variables
+    
+    private float totalRecoilAppliedY = 0f;
+    [SerializeField] private float recoilRecoverySpeed = 15f; // Increased for a snappier mobile feel
+    [SerializeField] private float recoveryDelay = 0.1f;
+    private float lastShotTime;
+
+    #endregion
+
 
     public void SetInputEnabled(bool inputEnabled)
     {
@@ -100,7 +109,7 @@ public partial class PlayerController : NpcController
 
     void OnReload(InputValue input)
     {
-        if(npc.Alive)
+        if (npc.Alive)
         {
             npc.TryReload?.Invoke();
         }
@@ -212,8 +221,29 @@ public partial class PlayerController : NpcController
             return;
         }
 
+        // 1. Process regular touch/joystick input
         LookAngle.x += LookInput.x * LookSensitivity.x;
         LookAngle.y += LookInput.y * LookSensitivity.y;
+
+        // 2. BREAK RECOVERY: If player intentionally fights/moves looking inputs,
+        // stop forcing historical recoil correction.
+        if (Mathf.Abs(LookInput.y) > 0.01f)
+        {
+            totalRecoilAppliedY = 0f;
+        }
+
+        // 3. RECOIL RECOVERY PROCEDURAL LOOP
+        // If there's recoil to compensate, no heavy stick input, and cooldown has passed
+        if (totalRecoilAppliedY > 0f && Mathf.Abs(LookInput.y) < 0.01f && Time.time > lastShotTime + recoveryDelay)
+        {
+            float recoveryAmount = recoilRecoverySpeed * Time.deltaTime;
+
+            // Protect from over-snapping past the origin target point
+            recoveryAmount = Mathf.Min(recoveryAmount, totalRecoilAppliedY);
+
+            LookAngle.y -= recoveryAmount;
+            totalRecoilAppliedY -= recoveryAmount;
+        }
 
         LookAngle.y = Mathf.Clamp(LookAngle.y, -70f, 70f);
     }
@@ -256,5 +286,23 @@ public partial class PlayerController : NpcController
     }
 
     #endregion
+
+    public void ApplyCameraKick(float verticalKick, float horizontalKick)
+    {
+        if (!npc.Alive || !inputEnabled) return;
+
+        // 1. Instantly punch tracking coordinates up/sway
+        LookAngle.y += verticalKick;
+        LookAngle.x += Random.Range(-horizontalKick, horizontalKick);
+
+        // 2. Track total distance to climb back down later
+        totalRecoilAppliedY += verticalKick;
+
+        // 3. Log timestamp to dictate recovery delay threshold
+        lastShotTime = Time.time;
+
+        // Safety clamp boundary check
+        LookAngle.y = Mathf.Clamp(LookAngle.y, -70f, 70f);
+    }
 
 }

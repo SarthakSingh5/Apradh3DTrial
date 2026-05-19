@@ -114,6 +114,13 @@ public class Weapon : NpcComponent
             shooter.Shoot(muzzle, npc.currentBloom);
             fireMode.OnFired(state);
             PlayWeaponSound(shooter.shotSound);
+
+            if (npc.controller is PlayerController playerController)
+            {
+                // Pass values based on weapon stats. 
+                // For example: 2.0f vertical jump, 0.5f horizontal variance.
+                playerController.ApplyCameraKick(2.0f, 0.5f);
+            }
         }
     }
 

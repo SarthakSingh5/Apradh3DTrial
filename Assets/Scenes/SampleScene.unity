@@ -369,6 +369,12 @@ MonoBehaviour:
   shooter: {fileID: 11400000, guid: 15b94281dd9a7bd46a3acb2bfe71886b, type: 2}
   fireMode: {fileID: 11400000, guid: 160bac22d35cbc246b7d22e3f80c3690, type: 2}
   muzzle: {fileID: 1198188049}
+  state:
+    isFiring: 0
+    hasFired: 0
+    nextFireTime: 0
+    currAmmo: 0
+    isReloading: 0
 --- !u!1 &118043568
 GameObject:
   m_ObjectHideFlags: 0
@@ -31628,6 +31634,12 @@ MonoBehaviour:
   shooter: {fileID: 11400000, guid: 15b94281dd9a7bd46a3acb2bfe71886b, type: 2}
   fireMode: {fileID: 11400000, guid: 160bac22d35cbc246b7d22e3f80c3690, type: 2}
   muzzle: {fileID: 1762393057}
+  state:
+    isFiring: 0
+    hasFired: 0
+    nextFireTime: 0
+    currAmmo: 0
+    isReloading: 0
 --- !u!82 &1803909733
 AudioSource:
   m_ObjectHideFlags: 0
@@ -38115,6 +38127,12 @@ MonoBehaviour:
   shooter: {fileID: 11400000, guid: 15b94281dd9a7bd46a3acb2bfe71886b, type: 2}
   fireMode: {fileID: 11400000, guid: 160bac22d35cbc246b7d22e3f80c3690, type: 2}
   muzzle: {fileID: 8291857607588450288}
+  state:
+    isFiring: 0
+    hasFired: 0
+    nextFireTime: 0
+    currAmmo: 0
+    isReloading: 0
 --- !u!4 &4950238077743707469
 Transform:
   m_ObjectHideFlags: 0

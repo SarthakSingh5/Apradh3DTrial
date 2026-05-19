@@ -147,6 +147,8 @@ public class Npc : MonoBehaviour
     public void ReleaseSlide() => weapon?.OnReleaseSlide();
     public void WeaponReloaded() => weapon?.OnWeaponReloaded();
 
+    public NpcController controller;
+
 
 
 
@@ -165,6 +167,11 @@ public class Npc : MonoBehaviour
         if (weapon == null)
         {
             weapon = GetComponentInChildren<Weapon>();
+        }
+
+        if(controller == null)
+        {
+            controller = GetComponentInChildren<NpcController>();
         }
     }
 
