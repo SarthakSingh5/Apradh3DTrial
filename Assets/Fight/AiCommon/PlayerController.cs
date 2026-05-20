@@ -38,11 +38,17 @@ public partial class PlayerController : NpcController
     bool inputEnabled = true;
 
     #region Recoil Variables
-    
+
     private float totalRecoilAppliedY = 0f;
     [SerializeField] private float recoilRecoverySpeed = 15f; // Increased for a snappier mobile feel
     [SerializeField] private float recoveryDelay = 0.1f;
     private float lastShotTime;
+
+    private float totalRecoilAppliedX = 0f; // Tracks horizontal shifting so we can recover it
+    [SerializeField] private float horizontalRecoverySpeed = 10f; // Speed at which the view centers back up
+
+    private float currentCameraRoll = 0f; // Tracks current Z-axis tilt
+    [SerializeField] private float rollReturnSpeed = 20f; // How fast the screen flattens back out
 
     #endregion
 
@@ -191,7 +197,11 @@ public partial class PlayerController : NpcController
     void LateUpdate()
     {
         CameraTarget.position = npc.transform.position + CameraOffset;
-        CameraTarget.rotation = Quaternion.Lerp(CameraTarget.rotation, Quaternion.Euler(-LookAngle.y, LookAngle.x, 0f), LookSmoothing * Time.deltaTime);
+
+        // Pass -LookAngle.y (Pitch), LookAngle.x (Yaw), and currentCameraRoll (Roll)
+        Quaternion targetRotation = Quaternion.Euler(-LookAngle.y, LookAngle.x, currentCameraRoll);
+
+        CameraTarget.rotation = Quaternion.Lerp(CameraTarget.rotation, targetRotation, LookSmoothing * Time.deltaTime);
     }
 
     #endregion
@@ -216,34 +226,42 @@ public partial class PlayerController : NpcController
 
     void UpdateLookAngle()
     {
-        if (inputEnabled == false)
-        {
-            return;
-        }
+        if (inputEnabled == false) return;
 
-        // 1. Process regular touch/joystick input
+        // 1. Standard Touch/Mouse Input
         LookAngle.x += LookInput.x * LookSensitivity.x;
         LookAngle.y += LookInput.y * LookSensitivity.y;
 
-        // 2. BREAK RECOVERY: If player intentionally fights/moves looking inputs,
-        // stop forcing historical recoil correction.
-        if (Mathf.Abs(LookInput.y) > 0.01f)
+        // Break memories if the player manually fights the camera adjustment
+        if (Mathf.Abs(LookInput.y) > 0.01f) totalRecoilAppliedY = 0f;
+        if (Mathf.Abs(LookInput.x) > 0.01f) totalRecoilAppliedX = 0f;
+
+        // 2. The Shared Cooldown Window Threshold Check
+        if (Time.time > lastShotTime + recoveryDelay)
         {
-            totalRecoilAppliedY = 0f;
+            // Recover Vertical (Y)
+            if (totalRecoilAppliedY > 0f && Mathf.Abs(LookInput.y) < 0.01f)
+            {
+                float recoveryAmountY = recoilRecoverySpeed * Time.deltaTime;
+                recoveryAmountY = Mathf.Min(recoveryAmountY, totalRecoilAppliedY);
+                LookAngle.y -= recoveryAmountY;
+                totalRecoilAppliedY -= recoveryAmountY;
+            }
+
+            // Recover Horizontal Centering (X)
+            if (totalRecoilAppliedX != 0f && Mathf.Abs(LookInput.x) < 0.01f)
+            {
+                // MoveTowards brings the tracking state smoothly closer to 0
+                float targetXMemory = Mathf.MoveTowards(totalRecoilAppliedX, 0f, horizontalRecoverySpeed * Time.deltaTime);
+
+                // Calculate the exact change applied this frame and apply it to our real angle
+                float deltaX = totalRecoilAppliedX - targetXMemory;
+                LookAngle.x -= deltaX;
+                totalRecoilAppliedX = targetXMemory;
+            }
         }
-
-        // 3. RECOIL RECOVERY PROCEDURAL LOOP
-        // If there's recoil to compensate, no heavy stick input, and cooldown has passed
-        if (totalRecoilAppliedY > 0f && Mathf.Abs(LookInput.y) < 0.01f && Time.time > lastShotTime + recoveryDelay)
-        {
-            float recoveryAmount = recoilRecoverySpeed * Time.deltaTime;
-
-            // Protect from over-snapping past the origin target point
-            recoveryAmount = Mathf.Min(recoveryAmount, totalRecoilAppliedY);
-
-            LookAngle.y -= recoveryAmount;
-            totalRecoilAppliedY -= recoveryAmount;
-        }
+        // Smoothly flatten Camera Roll (Z-axis) back to 0 constantly every frame
+        currentCameraRoll = Mathf.MoveTowards(currentCameraRoll, 0f, rollReturnSpeed * Time.deltaTime);
 
         LookAngle.y = Mathf.Clamp(LookAngle.y, -70f, 70f);
     }
@@ -287,22 +305,24 @@ public partial class PlayerController : NpcController
 
     #endregion
 
-    public void ApplyCameraKick(float verticalKick, float horizontalKick)
+    public void ApplyCameraKick(float verticalKick, float horizontalKick, float rollKick)
     {
         if (!npc.Alive || !inputEnabled) return;
 
-        // 1. Instantly punch tracking coordinates up/sway
+        // 1. Vertical & Horizontal Forces
         LookAngle.y += verticalKick;
-        LookAngle.x += Random.Range(-horizontalKick, horizontalKick);
-
-        // 2. Track total distance to climb back down later
         totalRecoilAppliedY += verticalKick;
 
-        // 3. Log timestamp to dictate recovery delay threshold
-        lastShotTime = Time.time;
+        float randomHoriz = Random.Range(-horizontalKick, horizontalKick);
+        LookAngle.x += randomHoriz;
+        totalRecoilAppliedX += randomHoriz;
 
-        // Safety clamp boundary check
+        // 2. Camera Roll (Randomly twist left or right per bullet)
+        currentCameraRoll += Random.Range(-rollKick, rollKick);
+
+        // 3. Housekeeping Clamps and Timers
         LookAngle.y = Mathf.Clamp(LookAngle.y, -70f, 70f);
+        lastShotTime = Time.time;
     }
 
 }

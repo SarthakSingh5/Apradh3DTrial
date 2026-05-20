@@ -119,7 +119,7 @@ public class Weapon : NpcComponent
             {
                 // Pass values based on weapon stats. 
                 // For example: 2.0f vertical jump, 0.5f horizontal variance.
-                playerController.ApplyCameraKick(2.0f, 0.5f);
+                playerController.ApplyCameraKick(1.8f, 2f,3.5f);
             }
         }
     }
