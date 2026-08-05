@@ -173,6 +173,10 @@ public class Npc : MonoBehaviour
         {
             controller = GetComponentInChildren<NpcController>();
         }
+        // if(npcLook == null)
+        // {
+        //     npcLook = GetComponentInChildren<NpcLook>();
+        // }
     }
 
     private void Update()
