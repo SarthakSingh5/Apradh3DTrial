@@ -25414,12 +25414,13 @@ MonoBehaviour:
     m_Bits: 2048
   LineOfSightChecker: {fileID: 2019015620}
   MinTargetDistance: 5
-  HideSensitivity: -0.1
+  HideSensitivity: -0.6
   Updatefrequency: 5
   PeekOffsetDistance: 1
   TimeBetweenPeeks: 3
   PeekDuration: 1
   isPeeking: 0
+  failedToFindCover: 0
 --- !u!114 &622645043
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -64953,6 +64954,7 @@ MonoBehaviour:
   TimeBetweenPeeks: 3
   PeekDuration: 1
   isPeeking: 0
+  failedToFindCover: 0
 --- !u!114 &1912401280
 MonoBehaviour:
   m_ObjectHideFlags: 0

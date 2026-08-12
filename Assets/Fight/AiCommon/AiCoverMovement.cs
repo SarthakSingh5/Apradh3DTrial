@@ -334,7 +334,7 @@ public class AiCoverMovement : MonoBehaviour
 
     [Range(-1, 1)]
     [Tooltip("Requires the target to be on the opposite side of the wall. Lower = stricter.")]
-    public float HideSensitivity = -0.1f;
+    public float HideSensitivity = -1f;
 
     [Range(0, 5f)]
     public float Updatefrequency = 5f; 
@@ -351,6 +351,7 @@ public class AiCoverMovement : MonoBehaviour
     private Vector3 safeHidePosition;
     public bool isPeeking = false;
     private CoverSpline currentCover;
+    public bool failedToFindCover = false;
 
     public void StartHiding(Dog dog)
     {
@@ -374,17 +375,26 @@ public class AiCoverMovement : MonoBehaviour
     public bool HasAnyCover(Vector3 TargetPosition)
     {
         int hits = Physics.OverlapSphereNonAlloc(transform.position, LineOfSightChecker.Collider.radius, Colliders, HidableLayers);
-
         int validHits = 0;
 
         for (int i = 0; i < hits; i++)
         {
-            if (Vector3.Distance(Colliders[i].transform.position, TargetPosition) >= MinTargetDistance)
+            if (Colliders[i] != null && Colliders[i].TryGetComponent<CoverSpline>(out var spline))
             {
-                validHits++;
+                // Distance Check
+                if (Vector3.Distance(spline.transform.position, TargetPosition) >= MinTargetDistance)
+                {
+                    // Directional Safety Check (Dot Product)
+                    Vector3 dirToTarget = (TargetPosition - spline.transform.position).normalized;
+                    float coverAngle = Vector3.Dot(spline.transform.forward, dirToTarget);
+                    
+                    if (coverAngle <= HideSensitivity) 
+                    {
+                        validHits++;
+                    }
+                }
             }
         }
-
         return validHits > 0;
     }
 
@@ -401,25 +411,16 @@ public class AiCoverMovement : MonoBehaviour
             float shortestDist = Mathf.Infinity;
             Vector3 bestSafePoint = Vector3.zero;
 
-            // Find the best spline and closest safe point
             for (int i = 0; i < hits; i++)
             {
                 if (Colliders[i] != null && Colliders[i].TryGetComponent<CoverSpline>(out var spline))
                 {
-                    // 1. Ignore covers too close to the player
                     if (Vector3.Distance(spline.transform.position, TargetPosition) < MinTargetDistance) continue;
 
-                    // --- NEW REJECTION FILTER (DOT PRODUCT) ---
-                    // Calculate direction from the cover to the target
                     Vector3 dirToTarget = (TargetPosition - spline.transform.position).normalized;
-                    
-                    // transform.forward is our outward-facing normal (the red line).
                     float coverAngle = Vector3.Dot(spline.transform.forward, dirToTarget);
                     
-                    // If the angle is positive, the player is on the open side of the wall. 
-                    // Reject it.
                     if (coverAngle > HideSensitivity) continue;
-                    // ------------------------------------------
 
                     Vector3 closestPt = GetClosestPointOnSpline(spline, dog.transform.position);
                     float dist = Vector3.Distance(dog.transform.position, closestPt);
@@ -437,7 +438,9 @@ public class AiCoverMovement : MonoBehaviour
             {
                 currentCover = bestSpline;
                 safeHidePosition = bestSafePoint;
+                failedToFindCover = false;
 
+                dog.agent.updateRotation = true; // Let agent rotate while running
                 dog.npc.inCover = false;
                 dog.npc.SetDestination?.Invoke(safeHidePosition);
 
@@ -445,10 +448,21 @@ public class AiCoverMovement : MonoBehaviour
 
                 dog.npc.SetAim(false);
                 dog.npc.inCover = true;
+                dog.agent.updateRotation = false; // Lock agent rotation
                 
-                // Rotate back flat against the wall
+                // --- FIX 1 & 2: Face OUTWARD, prevent zero vector ---
                 Vector3 wallNormal = currentCover.GetSplineNormalWorld(0);
-                dog.transform.rotation = Quaternion.LookRotation(-wallNormal);
+                wallNormal.y = 0; // Flatten to prevent tilting
+                if (wallNormal != Vector3.zero)
+                {
+                    dog.transform.rotation = Quaternion.LookRotation(wallNormal); 
+                }
+                // ----------------------------------------------------
+            }
+            else
+            {
+                failedToFindCover = true;
+                dog.npc.inCover = false;
             }
 
             yield return Wait;
@@ -462,7 +476,6 @@ public class AiCoverMovement : MonoBehaviour
 
         while (true)
         {
-            // Wait until securely in cover and not already moving
             if (currentCover == null || !dog.npc.inCover || dog.agent.pathPending || Vector3.Distance(dog.transform.position, safeHidePosition) > 0.5f)
             {
                 yield return null;
@@ -471,7 +484,6 @@ public class AiCoverMovement : MonoBehaviour
 
             Vector3 TargetPosition = dog.targeting.TargetPosition;
 
-            // 1. Calculate Lateral Step-Out Vector based on Spline Nodes
             Vector3 node0 = currentCover.GetWorldPoint(0);
             Vector3 node1 = currentCover.GetWorldPoint(1);
             Vector3 coverDirection = (node1 - node0).normalized;
@@ -479,45 +491,44 @@ public class AiCoverMovement : MonoBehaviour
             float distToNode0 = Vector3.Distance(node0, TargetPosition);
             float distToNode1 = Vector3.Distance(node1, TargetPosition);
 
-            Vector3 peekPosition;
+            Vector3 peekPosition = (distToNode0 < distToNode1) 
+                ? node0 - (coverDirection * PeekOffsetDistance) 
+                : node1 + (coverDirection * PeekOffsetDistance);
 
-            // Step out from the node closest to the target
-            if (distToNode0 < distToNode1)
-            {
-                peekPosition = node0 - (coverDirection * PeekOffsetDistance); 
-            }
-            else
-            {
-                peekPosition = node1 + (coverDirection * PeekOffsetDistance);
-            }
-
-            // 2. Validate position on NavMesh and Execute Step-Out
             if (NavMesh.SamplePosition(peekPosition, out NavMeshHit peekHit, 2f, dog.agent.areaMask))
             {
+                dog.agent.updateRotation = true; // Let agent rotate to peek spot
                 dog.npc.SetDestination?.Invoke(peekHit.position);
                 yield return new WaitUntil(() => !dog.agent.pathPending && dog.agent.remainingDistance <= 0.2f);
                 
+                dog.agent.updateRotation = false; // Lock feet for shooting
                 isPeeking = true;
-                dog.npc.LookAt(TargetPosition); // Face target to shoot
 
-                // Hold peek to shoot
+                // --- FIX 3: Force Root to face target to assist Rig Builder ---
+                Vector3 dirToTarget = TargetPosition - dog.transform.position;
+                dirToTarget.y = 0; // Flatten to prevent zero vector errors
+                if (dirToTarget != Vector3.zero)
+                {
+                    dog.transform.rotation = Quaternion.LookRotation(dirToTarget);
+                }
+                // --------------------------------------------------------------
+
+                dog.npc.LookAt(TargetPosition); 
                 yield return peekDuration;
-                
                 isPeeking = false;
 
-                // 3. Retreat back to the safe point on the spline
+                dog.agent.updateRotation = true; // Let agent rotate to return
                 dog.npc.SetDestination?.Invoke(safeHidePosition);
                 yield return new WaitUntil(() => !dog.agent.pathPending && dog.agent.remainingDistance <= 0.2f);
                 
-                // Snap back to wall
+                dog.agent.updateRotation = false; // Lock feet back to wall
                 Vector3 wallNormal = currentCover.GetSplineNormalWorld(0);
-                dog.transform.rotation = Quaternion.LookRotation(-wallNormal);
+                wallNormal.y = 0;
+                if (wallNormal != Vector3.zero)
+                {
+                    dog.transform.rotation = Quaternion.LookRotation(wallNormal);
+                }
             }
-            else
-            {
-                Debug.LogWarning("NavMesh rejection: Peek position is off the walkable grid.");
-            }
-
             yield return waitBetweenPeeks;
         }
     }
