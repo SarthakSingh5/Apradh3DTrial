@@ -61,7 +61,8 @@ public class NpcHealth : NpcComponent, IDamageable, IHealth
 	public void Damage(DamageInfo damageInfo)
 	{
 		Points -= damageInfo.Damage;
-		Debug.Log($"{npc.name} took {damageInfo.Damage} damage, remaining points: {Points}");	}
+		// Debug.Log($"{npc.name} took {damageInfo.Damage} damage, remaining points: {Points}");
+	}
 
 
 	#region Testing Methods

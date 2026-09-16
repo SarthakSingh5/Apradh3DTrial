@@ -7,7 +7,7 @@ using UnityEngine;
 public class AiSensor : MonoBehaviour
 {
     public float distance = 10;
-    public float angle = 30;
+    public float angle = 90;
     public float height = 1.0f;
     public Color meshColor = Color.red;
     public int scanFrequency = 30;

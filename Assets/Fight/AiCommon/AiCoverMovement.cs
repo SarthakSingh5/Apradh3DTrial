@@ -1,3 +1,4 @@
+#region previous logic
 // using System.Collections;
 // using UnityEngine;
 // using UnityEngine.AI;
@@ -312,6 +313,8 @@
 
 // }
 
+#endregion
+
 
 
 
@@ -326,7 +329,7 @@ using System.Collections.Generic;
 
 public class AiCoverMovement : MonoBehaviour
 {
-    public LayerMask HidableLayers; 
+    public LayerMask HidableLayers;
     public EnemyLineOfSightChecker LineOfSightChecker;
 
     [Range(1, 10)]
@@ -334,31 +337,32 @@ public class AiCoverMovement : MonoBehaviour
 
     [Range(-1, 1)]
     [Tooltip("Requires the target to be on the opposite side of the wall. Lower = stricter.")]
-    public float HideSensitivity = -1f;
+    public float HideSensitivity = -0.6f;
 
     [Range(0, 5f)]
-    public float Updatefrequency = 5f; 
+    public float Updatefrequency = 5f;
 
     [Header("Peeking Settings")]
-    public float PeekOffsetDistance = 1f; 
+    public float PeekOffsetDistance = 1f;
     public float TimeBetweenPeeks = 3f;
     public float PeekDuration = 1f;
 
     private Coroutine peekCoroutine = null;
     private Coroutine movementCoroutine = null;
-    private Collider[] Colliders = new Collider[10]; 
+    private Collider[] Colliders = new Collider[10];
 
     private Vector3 safeHidePosition;
     public bool isPeeking = false;
     private CoverSpline currentCover;
     public bool failedToFindCover = false;
 
-    // --- NEW: Cache the root Dog reference ---
-    private Dog myDog; 
+    private Dog myDog;
 
     public void StartHiding(Dog dog)
     {
         myDog = dog;
+        myDog.agent.updateRotation = false; // PERMANENTLY LOCK NAVMESH ROTATION
+
         StopHiding(dog);
         movementCoroutine = StartCoroutine(Hide(dog));
         peekCoroutine = StartCoroutine(PeekAtTargetRoutine(dog));
@@ -368,7 +372,7 @@ public class AiCoverMovement : MonoBehaviour
     {
         if (movementCoroutine != null) StopCoroutine(movementCoroutine);
         if (peekCoroutine != null) StopCoroutine(peekCoroutine);
-        
+
         movementCoroutine = null;
         peekCoroutine = null;
         isPeeking = false;
@@ -378,9 +382,8 @@ public class AiCoverMovement : MonoBehaviour
 
     public bool HasAnyCover(Vector3 TargetPosition)
     {
-        // Use the root position for the sphere cast!
-        Vector3 originPos = myDog != null ? myDog.npc.transform.position : transform.position;
-        int hits = Physics.OverlapSphereNonAlloc(originPos, LineOfSightChecker.Collider.radius, Colliders, HidableLayers);
+        // Simply use the current transform. No brain reference needed!
+        int hits = Physics.OverlapSphereNonAlloc(transform.position, LineOfSightChecker.Collider.radius, Colliders, HidableLayers);
         int validHits = 0;
 
         for (int i = 0; i < hits; i++)
@@ -390,9 +393,10 @@ public class AiCoverMovement : MonoBehaviour
                 if (Vector3.Distance(spline.transform.position, TargetPosition) >= MinTargetDistance)
                 {
                     Vector3 dirToTarget = (TargetPosition - spline.transform.position).normalized;
+                    // TACTICAL DOT PRODUCT: Uses spline normal, not floor normal
                     float coverAngle = Vector3.Dot(spline.transform.forward, dirToTarget);
-                    
-                    if (coverAngle <= HideSensitivity) 
+
+                    if (coverAngle <= HideSensitivity)
                     {
                         validHits++;
                     }
@@ -402,24 +406,42 @@ public class AiCoverMovement : MonoBehaviour
         return validHits > 0;
     }
 
-    // --- NEW: Continuous Rotation Handoff ---
+    // --- CONTINUOUS ROTATION DIRECTOR ---
     private void Update()
     {
-        // Only run if we are securely locked in cover
-        if (myDog != null && myDog.npc.inCover)
+        if (myDog == null) return;
+
+        if (myDog.npc.inCover)
         {
-            if (isPeeking)
+            // PURE STATE LOGIC: No distance thresholds to cause tweaking!
+            if (isPeeking && myDog.targeting.HasTarget)
             {
-                // Smoothly aim at the enemy
-                myDog.npc.LookAt?.Invoke(myDog.targeting.TargetPosition);
+                Vector3 dirToTarget = myDog.targeting.TargetPosition - myDog.npc.transform.position;
+                dirToTarget.y = 0;
+                if (dirToTarget.sqrMagnitude > 0.01f)
+                {
+                    myDog.npc.LookAt?.Invoke(myDog.targeting.TargetPosition);
+                }
             }
             else if (currentCover != null)
             {
-                // Smoothly put back to the wall, facing the open space
                 Vector3 wallNormal = currentCover.GetSplineNormalWorld(0);
                 wallNormal.y = 0f;
-                Vector3 lookPos = myDog.npc.transform.position + (wallNormal * 1000f) + (Vector3.up * 1.5f);
-                myDog.npc.LookAt?.Invoke(lookPos);
+                if (wallNormal.sqrMagnitude > 0.01f)
+                {
+                    // THE FIX: Add a minus sign (-wallNormal) to spin the character 180 degrees!
+                    Vector3 lookPos = myDog.npc.transform.position + (-wallNormal * 10f);
+                    myDog.npc.LookAt?.Invoke(lookPos);
+                }
+            }
+        }
+        else if (myDog.agent.hasPath)
+        {
+            Vector3 moveDir = myDog.agent.desiredVelocity;
+            moveDir.y = 0f;
+            if (moveDir.sqrMagnitude > 0.1f)
+            {
+                myDog.npc.LookAt?.Invoke(myDog.npc.transform.position + (moveDir * 10f));
             }
         }
     }
@@ -430,15 +452,14 @@ public class AiCoverMovement : MonoBehaviour
 
         while (true)
         {
-            // If the peek coroutine is currently executing, freeze this coroutine completely.
-            if (isPeeking)
+            // NULL CHECK: Stop crashing if target dies
+            if (isPeeking || !dog.targeting.HasTarget)
             {
                 yield return null;
                 continue;
             }
 
             Vector3 TargetPosition = dog.targeting.TargetPosition;
-            // Use root position!
             int hits = Physics.OverlapSphereNonAlloc(dog.npc.transform.position, LineOfSightChecker.Collider.radius, Colliders, HidableLayers);
 
             CoverSpline bestSpline = null;
@@ -453,39 +474,51 @@ public class AiCoverMovement : MonoBehaviour
 
                     Vector3 dirToTarget = (TargetPosition - spline.transform.position).normalized;
                     float coverAngle = Vector3.Dot(spline.transform.forward, dirToTarget);
-                    
+
                     if (coverAngle > HideSensitivity) continue;
 
-                    // Use root position!
-                    Vector3 closestPt = GetClosestPointOnSpline(spline, dog.npc.transform.position);
-                    float dist = Vector3.Distance(dog.npc.transform.position, closestPt);
+                    // TIGHT CORNER ANCHOR MATH
+                    Vector3 optimalPt = GetOptimalAnchorPoint(spline, TargetPosition);
 
-                    if (dist < shortestDist)
+                    // --- THE NAVMESH REALITY CHECK ---
+                    // Force the coordinate onto walkable ground so the agent never gets stranded
+                    if (NavMesh.SamplePosition(optimalPt, out NavMeshHit navHit, 2f, dog.agent.areaMask))
                     {
-                        shortestDist = dist;
+                        optimalPt = navHit.position;
+                    }
+
+                    float distToWall = Vector3.Distance(dog.npc.transform.position, optimalPt);
+
+                    if (distToWall < shortestDist)
+                    {
+                        shortestDist = distToWall;
                         bestSpline = spline;
-                        bestSafePoint = closestPt;
+                        bestSafePoint = optimalPt;
                     }
                 }
             }
 
             if (bestSpline != null)
             {
+                bool isNewCover = (currentCover != bestSpline);
+                float distToSafePoint = Vector3.Distance(dog.npc.transform.position, bestSafePoint);
+
                 currentCover = bestSpline;
                 safeHidePosition = bestSafePoint;
                 failedToFindCover = false;
 
-                dog.agent.updateRotation = true; 
-                dog.npc.inCover = false;
-                dog.npc.SetDestination?.Invoke(safeHidePosition);
+                if (isNewCover || distToSafePoint > 2.0f)
+                {
+                    dog.npc.inCover = false;
+                    dog.npc.SetDestination?.Invoke(safeHidePosition);
 
-                yield return new WaitUntil(() => !dog.agent.pathPending && dog.agent.remainingDistance < 0.2f);
+                    yield return new WaitUntil(() => AgentReachedDestination(dog.agent));
 
-                dog.npc.SetAim(false);
-                dog.npc.inCover = true;
-                dog.agent.updateRotation = false; 
-                
-                // Rotations deleted here! Let Update() + NpcLook.cs handle it!
+                    dog.npc.SetAim(false);
+                    dog.npc.inCover = true;
+
+                    Debug.Log("Hiding");
+                }
             }
             else
             {
@@ -504,18 +537,16 @@ public class AiCoverMovement : MonoBehaviour
 
         while (true)
         {
-            // Wait until securely in cover and not currently shuffling along the wall
-            if (currentCover == null || !dog.npc.inCover || dog.agent.pathPending || failedToFindCover || Vector3.Distance(dog.npc.transform.position, safeHidePosition) > 1.5f)
+            // NULL CHECK
+            if (currentCover == null || !dog.npc.inCover || dog.agent.pathPending || failedToFindCover || !dog.targeting.HasTarget)
             {
                 yield return null;
                 continue;
             }
 
-            // Wait safely behind the wall
             yield return waitBetweenPeeks;
 
-            // Final safety check before stepping out: Did the player flank us while we were waiting?
-            if (currentCover == null || !dog.npc.inCover || failedToFindCover) continue;
+            if (currentCover == null || !dog.npc.inCover || failedToFindCover || !dog.targeting.HasTarget) continue;
 
             Vector3 TargetPosition = dog.targeting.TargetPosition;
 
@@ -526,57 +557,74 @@ public class AiCoverMovement : MonoBehaviour
             float distToNode0 = Vector3.Distance(node0, TargetPosition);
             float distToNode1 = Vector3.Distance(node1, TargetPosition);
 
-            Vector3 peekPosition = (distToNode0 < distToNode1) 
-                ? node0 - (coverDirection * PeekOffsetDistance) 
+            Vector3 peekPosition = (distToNode0 < distToNode1)
+                ? node0 - (coverDirection * PeekOffsetDistance)
                 : node1 + (coverDirection * PeekOffsetDistance);
 
-            if (NavMesh.SamplePosition(peekPosition, out NavMeshHit peekHit, 2f, dog.agent.areaMask))
+            // TIGHT 2.0f RADIUS PREVENTS CLIPPING THROUGH WALLS  
+            if (NavMesh.SamplePosition(peekPosition, out NavMeshHit peekHit, 2.0f, dog.agent.areaMask))
             {
-                // Lock the Hide() coroutine out so it cannot interfere!
-                isPeeking = true; 
-                
-                dog.agent.updateRotation = true; 
+                isPeeking = true;
+                Debug.Log($"Peeking at {peekHit.position}");
+
                 dog.npc.SetDestination?.Invoke(peekHit.position);
-                
-                yield return new WaitUntil(() => !dog.agent.pathPending && dog.agent.remainingDistance <= (dog.agent.stoppingDistance + 0.2f));
-                
-                dog.agent.updateRotation = false; 
-                
-                // Shoot!
+                yield return new WaitUntil(() => AgentReachedDestination(dog.agent));
+
+
                 yield return peekDuration;
 
-                // Retreat
-                dog.agent.updateRotation = true; 
+                if(!dog.targeting.TargetInSight)
+                {
+                    failedToFindCover = true;
+                }
+
                 dog.npc.SetDestination?.Invoke(safeHidePosition);
-                
-                yield return new WaitUntil(() => !dog.agent.pathPending && dog.agent.remainingDistance <= (dog.agent.stoppingDistance + 0.2f));
-                
-                dog.agent.updateRotation = false; 
-                
-                // Unlock the Hide() coroutine to scan again!
+                yield return new WaitUntil(() => AgentReachedDestination(dog.agent));
+
+
                 isPeeking = false;
             }
             else
             {
-                // If the peek spot is invalid (off the map), wait and try again later
-                yield return null; 
+                yield return null;
             }
         }
     }
 
-    private Vector3 GetClosestPointOnSpline(CoverSpline spline, Vector3 pos)
+    // --- TIGHT DYNAMIC CORNERS ---
+    private Vector3 GetOptimalAnchorPoint(CoverSpline spline, Vector3 targetPos)
     {
-        Vector3 p1 = spline.GetWorldPoint(0);
-        Vector3 p2 = spline.GetWorldPoint(1); 
-        
-        Vector3 lineDir = p2 - p1;
-        float lineLen = lineDir.magnitude;
-        lineDir.Normalize();
-        
-        Vector3 v = pos - p1;
-        float d = Vector3.Dot(v, lineDir);
-        d = Mathf.Clamp(d, 0f, lineLen); 
-        
-        return p1 + lineDir * d;
+        Vector3 node0 = spline.GetWorldPoint(0);
+        Vector3 node1 = spline.GetWorldPoint(1);
+        Vector3 coverDirection = (node1 - node0).normalized;
+
+        float dist0 = Vector3.Distance(node0, targetPos);
+        float dist1 = Vector3.Distance(node1, targetPos);
+
+        float wallLength = Vector3.Distance(node0, node1);
+        // Stays tight to the edge (0.2f), preventing the AI from hiding in the center
+        float insetBuffer = Mathf.Min(0.2f, wallLength * 0.25f);
+
+        if (dist0 < dist1)
+        {
+            return node0 + (coverDirection * insetBuffer);
+        }
+        else
+        {
+            return node1 - (coverDirection * insetBuffer);
+        }
+    }
+
+    // --- BULLETPROOF ARRIVAL CHECK ---
+    private bool AgentReachedDestination(NavMeshAgent agent)
+    {
+        if (agent.pathPending) return false;
+
+        // THE FIX: Massive 1.0f buffer so it never gets permanently stuck on a NavMesh barrier
+        if (agent.remainingDistance <= agent.stoppingDistance + 1.0f) return true;
+
+        if (!agent.hasPath || agent.pathStatus == NavMeshPathStatus.PathInvalid) return true;
+
+        return false;
     }
 }

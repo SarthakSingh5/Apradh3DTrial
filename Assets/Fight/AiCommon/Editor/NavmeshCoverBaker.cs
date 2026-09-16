@@ -36,12 +36,14 @@ public class NavMeshCoverBaker : EditorWindow
         }
 
         Dictionary<Edge, int> edgeCounts = new Dictionary<Edge, int>();
+        // NEW: Tracks the original clockwise order provided by Unity
+        Dictionary<Edge, Vector2Int> originalDirections = new Dictionary<Edge, Vector2Int>();
 
         for (int i = 0; i < finalIndices.Length; i += 3)
         {
-            AddEdge(edgeCounts, finalIndices[i], finalIndices[i + 1]);
-            AddEdge(edgeCounts, finalIndices[i + 1], finalIndices[i + 2]);
-            AddEdge(edgeCounts, finalIndices[i + 2], finalIndices[i]);
+            AddEdge(edgeCounts, originalDirections, finalIndices[i], finalIndices[i + 1]);
+            AddEdge(edgeCounts, originalDirections, finalIndices[i + 1], finalIndices[i + 2]);
+            AddEdge(edgeCounts, originalDirections, finalIndices[i + 2], finalIndices[i]);
         }
 
         GameObject oldParent = GameObject.Find("NavMesh_AutoCover_System");
@@ -54,19 +56,21 @@ public class NavMeshCoverBaker : EditorWindow
         {
             if (kvp.Value == 1)
             {
-                Vector3 originalPt1 = finalVertices[kvp.Key.v1];
-                Vector3 originalPt2 = finalVertices[kvp.Key.v2];
+                // Retrieve the unscrambled A-to-B order
+                Vector2Int origDir = originalDirections[kvp.Key];
+                Vector3 originalPt1 = finalVertices[origDir.x];
+                Vector3 originalPt2 = finalVertices[origDir.y];
 
                 float rawDistance = Vector3.Distance(originalPt1, originalPt2);
 
-                // REJECTION FILTER: The wall must be wider than the NPC's physical body 
-                // (1.5 units is standard for a human with a rifle). 
-                // If it is thinner than this, it is not valid cover.
                 if (rawDistance < 1.5f) continue;
 
                 // --- HORIZONTAL INSET MATH ---
                 float insetAmount = 0.4f;
                 Vector3 edgeDirection = (originalPt2 - originalPt1).normalized;
+
+                // Because the order is perfectly clockwise, Cross with UP always points outward
+                Vector3 outwardNormal = -Vector3.Cross(edgeDirection, Vector3.up).normalized;
 
                 // Push the left point right, and the right point left
                 Vector3 pt1 = originalPt1 + (edgeDirection * insetAmount);
@@ -77,8 +81,6 @@ public class NavMeshCoverBaker : EditorWindow
                 splineObj.transform.SetParent(coverParent.transform);
                 splineObj.transform.position = (pt1 + pt2) / 2f;
 
-                // Calculate outward normal for rotation
-                Vector3 outwardNormal = Vector3.Cross(edgeDirection, Vector3.up).normalized;
                 if (outwardNormal != Vector3.zero)
                 {
                     splineObj.transform.rotation = Quaternion.LookRotation(outwardNormal, Vector3.up);
@@ -130,12 +132,18 @@ public class NavMeshCoverBaker : EditorWindow
         }
     }
 
-    private static void AddEdge(Dictionary<Edge, int> edgeCounts, int v1, int v2)
+    private static void AddEdge(Dictionary<Edge, int> edgeCounts, Dictionary<Edge, Vector2Int> originalDirections, int v1, int v2)
     {
         Edge edge = new Edge(v1, v2);
         if (edgeCounts.ContainsKey(edge))
+        {
             edgeCounts[edge]++;
+        }
         else
+        {
             edgeCounts[edge] = 1;
+            // Map the mathematically sorted Edge to its original drawing direction
+            originalDirections[edge] = new Vector2Int(v1, v2);
+        }
     }
 }

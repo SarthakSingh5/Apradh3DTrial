@@ -9,27 +9,28 @@ public class AiCoverState : AiState
 
     public void Enter(Dog dog)
     {
+        Debug.Log("Entering Cover State");
         dog.coverMovement.StartHiding(dog);
     }
 
     public void Update(Dog dog)
     {
-        // ESCAPE HATCH: If no cover is safe, instantly go back to fighting/flanking
+        // ESCAPE HATCH: Only leave cover if the player flanked us and broke the math, 
+        // OR if the wall itself is no longer safe.
         if (dog.coverMovement.failedToFindCover)
         {
             dog.stateMachine.ChangeState(AiStateId.EngageTarget);
             return;
         }
 
-        // Check if the AI is peeking and does not have TargetInsight
-        if (dog.coverMovement.isPeeking && !dog.targeting.TargetInSight)
-        {
-            dog.stateMachine.ChangeState(AiStateId.EngageTarget);
-        }
+        // We DO NOT check for TargetInSight here anymore. 
+        // The NPC is behind a wall, so it naturally won't have line of sight 
+        // until the Peek coroutine physically pushes it around the corner.
     }
 
     public void Exit(Dog dog)
     {
+        Debug.Log("Exiting Cover State");
         dog.coverMovement.StopHiding(dog);
     }
 }
