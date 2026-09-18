@@ -345,7 +345,7 @@ public class AiCoverMovement : MonoBehaviour
     [Header("Peeking Settings")]
     public float PeekOffsetDistance = 1f;
     public float TimeBetweenPeeks = 3f;
-    public float PeekDuration = 1f;
+    public float PeekDuration = 3f;
 
     private Coroutine peekCoroutine = null;
     private Coroutine movementCoroutine = null;
@@ -509,12 +509,15 @@ public class AiCoverMovement : MonoBehaviour
 
                 if (isNewCover || distToSafePoint > 2.0f)
                 {
+                    dog.npc.SetAim(true);
+                    dog.npc.canShoot = true;
                     dog.npc.inCover = false;
                     dog.npc.SetDestination?.Invoke(safeHidePosition);
 
                     yield return new WaitUntil(() => AgentReachedDestination(dog.agent));
 
                     dog.npc.SetAim(false);
+                    dog.npc.canShoot = false;
                     dog.npc.inCover = true;
 
                     Debug.Log("Hiding");
@@ -570,6 +573,8 @@ public class AiCoverMovement : MonoBehaviour
                 dog.npc.SetDestination?.Invoke(peekHit.position);
                 yield return new WaitUntil(() => AgentReachedDestination(dog.agent));
 
+                dog.npc.SetAim(true);
+                dog.npc.canShoot = true;
 
                 yield return peekDuration;
 
@@ -578,9 +583,11 @@ public class AiCoverMovement : MonoBehaviour
                     failedToFindCover = true;
                 }
 
+                dog.npc.SetAim(false);
+                dog.npc.canShoot = false;
+
                 dog.npc.SetDestination?.Invoke(safeHidePosition);
                 yield return new WaitUntil(() => AgentReachedDestination(dog.agent));
-
 
                 isPeeking = false;
             }

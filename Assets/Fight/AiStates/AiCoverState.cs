@@ -10,6 +10,8 @@ public class AiCoverState : AiState
     public void Enter(Dog dog)
     {
         Debug.Log("Entering Cover State");
+        dog.npc.SetAim(true);
+        dog.npc.canShoot = true;
         dog.coverMovement.StartHiding(dog);
     }
 
@@ -31,6 +33,8 @@ public class AiCoverState : AiState
     public void Exit(Dog dog)
     {
         Debug.Log("Exiting Cover State");
+        dog.npc.SetAim(false);
+        dog.npc.canShoot = false;
         dog.coverMovement.StopHiding(dog);
     }
 }

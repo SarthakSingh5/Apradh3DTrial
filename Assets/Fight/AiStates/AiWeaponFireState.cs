@@ -9,6 +9,7 @@ public class AiWeaponFireState : AiWeaponState
 
     public void Enter(Dog dog)
     {
+        Debug.Log("Fire");
         dog.npc.SetAim(true);
         dog.fireDirector.StartDirector(dog);
     }
@@ -23,6 +24,8 @@ public class AiWeaponFireState : AiWeaponState
 
     public void Exit(Dog dog)
     {
+        Debug.Log("Exit Fire");
+        dog.npc.SetAim(false);
         dog.fireDirector.StopDirector();
 
     }

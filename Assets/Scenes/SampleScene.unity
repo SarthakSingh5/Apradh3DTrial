@@ -25572,7 +25572,7 @@ MonoBehaviour:
   Updatefrequency: 5
   PeekOffsetDistance: 1
   TimeBetweenPeeks: 3
-  PeekDuration: 1
+  PeekDuration: 3
   isPeeking: 0
   failedToFindCover: 0
 --- !u!114 &622645043
