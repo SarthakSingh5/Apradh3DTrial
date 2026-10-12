@@ -10459,6 +10459,7 @@ GameObject:
   m_Component:
   - component: {fileID: 9041332507656684163}
   - component: {fileID: 1388714327047726556}
+  - component: {fileID: 43801440902878168}
   m_Layer: 13
   m_Name: AK-47
   m_TagString: Untagged
@@ -10500,6 +10501,109 @@ MonoBehaviour:
   shooter: {fileID: 11400000, guid: 15b94281dd9a7bd46a3acb2bfe71886b, type: 2}
   fireMode: {fileID: 11400000, guid: 160bac22d35cbc246b7d22e3f80c3690, type: 2}
   muzzle: {fileID: 2606943580712253955}
+  state:
+    isFiring: 0
+    hasFired: 0
+    nextFireTime: 0
+    currAmmo: 0
+    isReloading: 0
+--- !u!82 &43801440902878168
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1456661569702866881}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &1625882780934909882
 GameObject:
   m_ObjectHideFlags: 0
@@ -10892,6 +10996,12 @@ MonoBehaviour:
   inCover: 0
   shooter: {fileID: 0}
   carryingGun: 1
+  canShoot: 0
+  currentBloom: 0
+  recoilBloom: 0
+  isPanicking: 0
+  weapon: {fileID: 0}
+  controller: {fileID: 0}
 --- !u!114 &609910240899554510
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10974,7 +11084,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   npc: {fileID: 0}
   dog: {fileID: 0}
-  points: 100
+  points: 100000
   maxPoints: 100
 --- !u!114 &6407610002787490223
 MonoBehaviour:
@@ -11204,6 +11314,10 @@ MonoBehaviour:
   LookSmoothing: 5
   LookSensitivity: {x: 0.4, y: 0.4}
   MoveSmoothing: 5
+  recoilRecoverySpeed: 15
+  recoveryDelay: 0.1
+  horizontalRecoverySpeed: 10
+  rollReturnSpeed: 20
 --- !u!114 &5503750654730797717
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12983,6 +13097,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2385115959923658038}
   - component: {fileID: 6175219951831019426}
+  - component: {fileID: 7427739238317864242}
   m_Layer: 13
   m_Name: Point light
   m_TagString: Untagged
@@ -13070,6 +13185,29 @@ Light:
   m_LightUnit: 1
   m_LuxAtDistance: 1
   m_EnableSpotReflector: 1
+--- !u!114 &7427739238317864242
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6509277682038321111}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Version: 3
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_LightLayerMask: 1
+  m_RenderingLayers: 1
+  m_CustomShadowLayers: 0
+  m_ShadowLayerMask: 1
+  m_ShadowRenderingLayers: 1
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
 --- !u!1 &6708962275675086261
 GameObject:
   m_ObjectHideFlags: 0
