@@ -912,6 +912,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2152655639351159567, guid: 696fcca945782e74f94ac909d401f6a1, type: 3}
+      propertyPath: rolloffMode
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4962047724546837402, guid: 696fcca945782e74f94ac909d401f6a1, type: 3}
       propertyPath: max
       value: 

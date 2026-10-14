@@ -52362,6 +52362,10 @@ PrefabInstance:
       propertyPath: HidableLayers.m_Bits
       value: 2048
       objectReference: {fileID: 0}
+    - target: {fileID: 5531232270985375766, guid: 696fcca945782e74f94ac909d401f6a1, type: 3}
+      propertyPath: VisionBlockingLayers.m_Bits
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5761609020053024611, guid: 696fcca945782e74f94ac909d401f6a1, type: 3}
       propertyPath: m_Name
       value: NPC 1
