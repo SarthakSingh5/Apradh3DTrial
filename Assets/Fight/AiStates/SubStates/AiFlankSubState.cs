@@ -51,8 +51,12 @@ public class AiFlankSubState : AiFollowSubState
         direction = Quaternion.Euler(0f, randomAngle, 0f) * direction;
         Vector3 destination = dog.targeting.TargetPosition + direction * randomRadius;
 
-        dog.npc.canMove = true;
-        dog.npc.SetDestination?.Invoke(destination);
+        // Ensure the random point is actually walkable
+        if (UnityEngine.AI.NavMesh.SamplePosition(destination, out UnityEngine.AI.NavMeshHit hit, 4f, dog.agent.areaMask))
+        {
+            dog.npc.canMove = true;
+            dog.npc.SetDestination?.Invoke(hit.position);
+        }
     }
 
     protected override void GoToTarget(Dog dog)

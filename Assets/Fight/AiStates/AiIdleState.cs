@@ -9,8 +9,6 @@ public class AiIdleState : AiState
 
     public void Enter(Dog dog)
     {
-        dog.npc.canShoot = false;
-
     }
 
     public void Update(Dog dog)

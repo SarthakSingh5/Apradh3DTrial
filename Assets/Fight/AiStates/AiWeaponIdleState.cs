@@ -9,7 +9,6 @@ public class AiWeaponIdleState : AiWeaponState
 
     public void Enter(Dog dog)
     {
-        dog.npc.SetAim(false);
     }
 
     public void Update(Dog dog)
@@ -22,6 +21,5 @@ public class AiWeaponIdleState : AiWeaponState
 
     public void Exit(Dog dog)
     {
-        // do nothing
     }
 }

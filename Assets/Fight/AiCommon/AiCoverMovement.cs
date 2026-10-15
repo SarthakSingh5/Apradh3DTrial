@@ -365,6 +365,10 @@ public class AiCoverMovement : MonoBehaviour
     [Tooltip("Layers that block bullets/vision (e.g., Default, Environment, Obstacles)")]
     public LayerMask VisionBlockingLayers;
 
+    [Header("Tactical Movement")]
+    [Tooltip("How many times the AI will shoot before moving to flank")]
+    public int MaxPeeksBeforeMoving = 3;
+
     private Dog myDog;
 
     public void StartHiding(Dog dog)
@@ -538,15 +542,11 @@ public class AiCoverMovement : MonoBehaviour
 
                 if (isNewCover || distToSafePoint > 2.0f)
                 {
-                    dog.npc.SetAim(true);
-                    dog.npc.canShoot = true;
                     dog.npc.inCover = false;
                     dog.npc.SetDestination?.Invoke(safeHidePosition);
 
                     yield return new WaitUntil(() => AgentReachedDestination(dog.agent));
 
-                    dog.npc.SetAim(false);
-                    dog.npc.canShoot = false;
                     dog.npc.inCover = true;
                 }
             }
@@ -564,6 +564,7 @@ public class AiCoverMovement : MonoBehaviour
     {
         WaitForSeconds waitBetweenPeeks = new WaitForSeconds(TimeBetweenPeeks);
         WaitForSeconds peekDuration = new WaitForSeconds(PeekDuration);
+        int currentPeekCount = 0; // NEW: Track how many shots we've taken
 
         while (true)
         {
@@ -665,8 +666,6 @@ public class AiCoverMovement : MonoBehaviour
                 dog.npc.SetDestination?.Invoke(peekHit.position);
                 yield return new WaitUntil(() => AgentReachedDestination(dog.agent));
 
-                dog.npc.SetAim(true);
-                dog.npc.canShoot = true;
                 
                 Debug.DrawLine(dog.transform.position + Vector3.up * 1.5f, dog.targeting.TargetPosition, Color.red, 2.0f);
 
@@ -678,13 +677,26 @@ public class AiCoverMovement : MonoBehaviour
                     failedToFindCover = true;
                 }
 
-                dog.npc.SetAim(false);
-                dog.npc.canShoot = false;
 
                 dog.npc.SetDestination?.Invoke(safeHidePosition);
                 yield return new WaitUntil(() => AgentReachedDestination(dog.agent));
 
                 isPeeking = false;
+
+                // --- NEW: TACTICAL REPOSITIONING / FLANKING ---
+                currentPeekCount++;
+                if (currentPeekCount >= MaxPeeksBeforeMoving)
+                {
+                    // Add this perfectly good cover to the blacklist temporarily 
+                    // so the AI is forced to find a DIFFERENT spot.
+                    blacklistedCovers[currentCover] = TargetPosition; 
+                    
+                    // Force the state machine to drop into Engage and walk around
+                    failedToFindCover = true; 
+                    
+                    // Reset the counter for the next cover it finds
+                    currentPeekCount = 0; 
+                }
             }
             else
             {
