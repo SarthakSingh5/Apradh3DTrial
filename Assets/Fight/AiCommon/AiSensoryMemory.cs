@@ -28,12 +28,26 @@ public class AiSensoryMemory
         characters = new GameObject[maxPlayers];
     }
 
-    public void UpdateSenses(AiSensor sensor)
+    // --- NEW: Added TeamIdentifier myTeam as a parameter ---
+    public void UpdateSenses(AiSensor sensor, TeamIdentifier myTeam)
     {
-        int targets = sensor.Filter(characters,"CharacterController");
+        int targets = sensor.Filter(characters,"Character");
         for (int i = 0; i < targets; ++i)
         {
             GameObject target = characters[i];
+            
+            // --- NEW: TEAM FILTER LOGIC ---
+            if (myTeam != null)
+            {
+                // Get the team of the target we just saw
+                TeamIdentifier targetTeam = target.GetComponentInParent<TeamIdentifier>();
+                
+                // If they have a team, and it's the exact SAME as ours, skip them!
+                if (targetTeam != null && targetTeam.team == myTeam.team)
+                {
+                    continue; // Abort this loop iteration. Don't add to memory!
+                }
+            }
             
             RefreshMemory(sensor.gameObject, target);
         }

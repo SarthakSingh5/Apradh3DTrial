@@ -6,15 +6,22 @@ public class AiFollowSubState : AiEngageSubState
     public float minDistance = 8f;
     public float followDuration = 0f;
 
+    protected float microStrafeTimer = 0f;
+    protected float microStrafeCooldown = 3f;
+
     public virtual void Enter(Dog dog)
     {
         dog.npc.canMove = true;
         followDuration = Random.Range(2f, 4f);
     }
-
+ 
     public virtual void Update(Dog dog)
     {
         GoToTarget(dog);
+        
+        // --- NEW: Add the micromovement check! ---
+        // HandleMicroStrafing(dog);
+        
         followDuration -= Time.deltaTime;
         if (followDuration <= 0)
         {
@@ -46,12 +53,6 @@ public class AiFollowSubState : AiEngageSubState
         if (distance <= minDistance)
         {
             GetAwayFrom(dog, dog.targeting.TargetPosition);
-        }
-
-        if (!dog.targeting.TargetInSight)
-        {
-            dog.npc.canMove = true;
-            dog.npc.SetDestination?.Invoke(dog.targeting.TargetPosition);
         }
     }
 
@@ -86,6 +87,48 @@ public class AiFollowSubState : AiEngageSubState
         }
 
     }
+
+
+    // protected void HandleMicroStrafing(Dog dog)
+    // {
+    //     // Only execute if the AI has reached its destination and is basically standing still
+    //     if (!dog.agent.pathPending && dog.agent.remainingDistance <= dog.agent.stoppingDistance + 0.2f)
+    //     {
+    //         microStrafeTimer -= Time.deltaTime;
+            
+    //         if (microStrafeTimer <= 0f)
+    //         {
+    //             // 1. Get the direction to the player
+    //             Vector3 dirToPlayer = (dog.targeting.TargetPosition - dog.transform.position).normalized;
+                
+    //             // 2. Calculate the perpendicular "Sideways" vector (Cross product with Up)
+    //             Vector3 rightVector = Vector3.Cross(Vector3.up, dirToPlayer).normalized;
+                
+    //             // 3. Randomly choose Left or Right, and a tiny distance (1 to 2 meters)
+    //             float strafeAmount = Random.Range(1.0f, 2.0f) * (Random.value > 0.5f ? 1f : -1f);
+    //             Vector3 potentialDest = dog.transform.position + rightVector * strafeAmount;
+
+    //             // 4. Ensure the tiny step doesn't put the AI inside a wall
+    //             if (NavMesh.SamplePosition(potentialDest, out NavMeshHit hit, 2f, dog.agent.areaMask))
+    //             {
+    //                 dog.npc.canMove = true;
+    //                 // Move slightly slower than a normal walk for a highly tactical "aim walking" feel
+    //                 dog.agent.speed = dog.config.walkSpeed * 0.6f; 
+    //                 dog.agent.updateRotation = false; // Keep chest locked on player!
+                    
+    //                 dog.npc.SetDestination?.Invoke(hit.position);
+                    
+    //                 // Reset the timer with a random delay so it doesn't look robotic
+    //                 microStrafeTimer = Random.Range(2f, 4.5f);
+    //             }
+    //         }
+    //     }
+    //     else
+    //     {
+    //         // If the AI is actively running somewhere else, reset the timer
+    //         microStrafeTimer = 0.5f; 
+    //     }
+    // }
 
 
 

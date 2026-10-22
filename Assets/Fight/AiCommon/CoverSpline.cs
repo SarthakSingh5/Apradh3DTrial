@@ -5,6 +5,10 @@ public enum CoverHeight { Low, High }
 
 public class CoverSpline : MonoBehaviour
 {
+    // --- NEW: The Reservation Lock ---
+    [Tooltip("Tracks which AI currently owns this cover so they don't stack.")]
+    public GameObject Occupant = null; 
+
     [Header("Cover Settings")]
     public CoverHeight heightType = CoverHeight.High;
 

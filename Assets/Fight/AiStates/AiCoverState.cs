@@ -17,10 +17,28 @@ public class AiCoverState : AiState
     {
         // ESCAPE HATCH: Only leave cover if the player flanked us and broke the math, 
         // OR if the wall itself is no longer safe.
+
+        // 1. TOP-LEVEL FAIL-SAFE: Target died or memory expired while we were in cover!
+        if (!dog.targeting.HasTarget)
+        {
+            dog.stateMachine.ChangeState(AiStateId.FindTarget);
+            return;
+        }
+        
         if (dog.coverMovement.failedToFindCover)
         {
-            dog.stateMachine.ChangeState(AiStateId.EngageTarget);
-            return;
+            if(dog.targeting.HasTarget && dog.targeting.TargetInSight){
+                dog.stateMachine.ChangeState(AiStateId.EngageTarget);
+                return;
+            }
+            else if(dog.targeting.HasTarget && !dog.targeting.TargetInSight){
+                dog.stateMachine.ChangeState(AiStateId.Investigate);
+                return;
+            }
+            else{
+                dog.stateMachine.ChangeState(AiStateId.FindTarget);
+                return;
+            }
         }
 
         // We DO NOT check for TargetInSight here anymore. 

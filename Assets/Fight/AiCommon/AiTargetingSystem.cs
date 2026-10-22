@@ -44,16 +44,22 @@ public class AiTargetingSystem : MonoBehaviour
     AiSensor sensor;
     AiMemory bestMemory;
 
-    // Start is called before the first frame update
+    // --- NEW: Reference to the AI's own team ---
+    private TeamIdentifier myTeam;
+
     void Start()
     {
         sensor = GetComponent<AiSensor>();
+        
+        // Grab the team component from this AI (or its parent)
+        myTeam = GetComponentInParent<TeamIdentifier>();
     }
 
-    // Update is called once per frame
     void Update()
     {
-        memory.UpdateSenses(sensor);
+        // --- NEW: Pass our team into the sensory memory! ---
+        memory.UpdateSenses(sensor, myTeam);
+        
         memory.ForgetMemories(memorySpan);
         EvaluateScores();
     }

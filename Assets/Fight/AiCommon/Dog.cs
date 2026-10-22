@@ -38,6 +38,7 @@ public class Dog : AiController
         stateMachine.RegisterState(new AiAttackTargetState());
         stateMachine.RegisterState(new AiEngageTargetState());
         stateMachine.RegisterState(new AiCoverState());
+        stateMachine.RegisterState(new AiInvestigateState());
         stateMachine.ChangeState(initialState);
 
         weaponMachine = new AiWeaponStateMachine(this);

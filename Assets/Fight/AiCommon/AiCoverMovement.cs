@@ -390,8 +390,14 @@ public class AiCoverMovement : MonoBehaviour
         peekCoroutine = null;
         isPeeking = false;
         dog.npc.inCover = false;
+        
+        // --- NEW: FREE THE COVER WHEN LEAVING STATE ---
+        if (currentCover != null && currentCover.Occupant == dog.gameObject)
+        {
+            currentCover.Occupant = null;
+        }
+
         currentCover = null;
-        // blacklistedCovers.Clear(); // Clear memory when exiting combat state
     }
 
     public bool HasAnyCover(Vector3 TargetPosition)
@@ -403,13 +409,17 @@ public class AiCoverMovement : MonoBehaviour
         {
             if (Colliders[i] != null && Colliders[i].TryGetComponent<CoverSpline>(out var spline))
             {
+                // --- NEW: RESERVATION CHECK ---
+                if (spline.Occupant != null && spline.Occupant != gameObject)
+                {
+                    continue; // Someone else is using this cover, skip it!
+                }
+
                 // --- TACTICAL MEMORY SYNC ---
-                // Before saying this cover is valid, check if it's on the blacklist!
                 if (blacklistedCovers.TryGetValue(spline, out Vector3 failedPlayerPos))
                 {
                     if (Vector3.Distance(TargetPosition, failedPlayerPos) < BlacklistResetDistance)
                     {
-                        // The player hasn't moved enough. This cover is still blacklisted.
                         continue; 
                     }
                 }
@@ -490,17 +500,21 @@ public class AiCoverMovement : MonoBehaviour
             {
                 if (Colliders[i] != null && Colliders[i].TryGetComponent<CoverSpline>(out var spline))
                 {
+                    // --- NEW: THE RESERVATION CHECK ---
+                    if (spline.Occupant != null && spline.Occupant != dog.gameObject)
+                    {
+                        continue; // Teammate is already here, skip!
+                    }
+
                     // --- 1. TACTICAL MEMORY CHECK ---
                     if (blacklistedCovers.TryGetValue(spline, out Vector3 failedPlayerPos))
                     {
                         if (Vector3.Distance(TargetPosition, failedPlayerPos) < BlacklistResetDistance)
                         {
-                            // Player is still in the same spot. This cover is known to be bad. Skip it!
                             continue;
                         }
                         else
                         {
-                            // Player moved significantly! We can try this cover again.
                             blacklistedCovers.Remove(spline);
                         }
                     }
@@ -536,7 +550,17 @@ public class AiCoverMovement : MonoBehaviour
                 bool isNewCover = (currentCover != bestSpline);
                 float distToSafePoint = Vector3.Distance(dog.npc.transform.position, bestSafePoint);
 
+                // --- NEW: RELEASE OLD COVER ---
+                if (isNewCover && currentCover != null && currentCover.Occupant == dog.gameObject)
+                {
+                    currentCover.Occupant = null; // Free up old wall for teammates
+                }
+
                 currentCover = bestSpline;
+                
+                // --- NEW: CLAIM NEW COVER ---
+                currentCover.Occupant = dog.gameObject; // Lock it down!
+
                 safeHidePosition = bestSafePoint;
                 failedToFindCover = false;
 
@@ -545,13 +569,39 @@ public class AiCoverMovement : MonoBehaviour
                     dog.npc.inCover = false;
                     dog.npc.SetDestination?.Invoke(safeHidePosition);
 
-                    yield return new WaitUntil(() => AgentReachedDestination(dog.agent));
+                    // --- DYNAMIC DANGER ZONE RUNNING LOOP ---
+                    float dangerZoneRadius = 6.0f;
+                    
+                    while (!AgentReachedDestination(dog.agent))
+                    {
+                        float distToPlayer = Vector3.Distance(dog.npc.transform.position, dog.targeting.TargetPosition);
+                        
+                        if (distToPlayer <= dangerZoneRadius)
+                        {
+                            dog.agent.speed = dog.config.walkSpeed;
+                            dog.agent.updateRotation = false; 
+                        }
+                        else
+                        {
+                            dog.agent.speed = dog.config.runSpeed;
+                            dog.agent.updateRotation = true; 
+                        }
+                        
+                        yield return null; 
+                    }
+                    // -----------------------------------------
 
                     dog.npc.inCover = true;
+                    dog.agent.updateRotation = false; 
                 }
             }
             else
             {
+                // If we couldn't find ANY cover, and we currently own one, release it
+                if (currentCover != null && currentCover.Occupant == dog.gameObject)
+                {
+                    currentCover.Occupant = null;
+                }
                 failedToFindCover = true;
                 dog.npc.inCover = false;
             }
@@ -564,7 +614,7 @@ public class AiCoverMovement : MonoBehaviour
     {
         WaitForSeconds waitBetweenPeeks = new WaitForSeconds(TimeBetweenPeeks);
         WaitForSeconds peekDuration = new WaitForSeconds(PeekDuration);
-        int currentPeekCount = 0; // NEW: Track how many shots we've taken
+        int currentPeekCount = 0; 
 
         while (true)
         {
@@ -584,10 +634,8 @@ public class AiCoverMovement : MonoBehaviour
             Vector3 node0 = currentCover.GetWorldPoint(0);
             Vector3 node1 = currentCover.GetWorldPoint(1);
             
-            // Vector running ALONG the wall (sideways)
             Vector3 coverDirection = (node1 - node0).normalized;
 
-            // Get normals for both ends to know which way is "outward" into the room
             Vector3 normal0 = currentCover.GetSplineNormalWorld(0);
             normal0.y = 0f;
             normal0.Normalize();
@@ -596,70 +644,53 @@ public class AiCoverMovement : MonoBehaviour
             normal1.y = 0f;
             normal1.Normalize();
 
-            // --- THE BEVEL FIX: HYBRID STEP ---
-            // Step sideways (PeekOffsetDistance) AND slightly outward (0.4f) to clear thick/angled doorframes
             float outwardStep = 0.4f;
             Vector3 peekPos0 = node0 - (coverDirection * PeekOffsetDistance) + (normal0 * outwardStep);
             Vector3 peekPos1 = node1 + (coverDirection * PeekOffsetDistance) + (normal1 * outwardStep);
 
-            // Calculate eye levels for raycasting
             Vector3 eyeLevel0 = peekPos0 + Vector3.up * 1.5f;
             Vector3 eyeLevel1 = peekPos1 + Vector3.up * 1.5f;
             
-            // Calculate eye levels at the exact edge of the cover (starting point for the step check)
             Vector3 nodeEye0 = node0 + Vector3.up * 1.5f;
             Vector3 nodeEye1 = node1 + Vector3.up * 1.5f;
 
-            // Used for the final standing spot and shooting line (shoulder width)
             float checkRadius = 0.25f; 
 
-            // 1. THE STEP CHECK (Diagonal Raycast)
-            // Checks the true diagonal path from the node to the offset peek spot
             bool step0IsClear = !Physics.Raycast(nodeEye0, (eyeLevel0 - nodeEye0).normalized, Vector3.Distance(nodeEye0, eyeLevel0), VisionBlockingLayers);
             bool step1IsClear = !Physics.Raycast(nodeEye1, (eyeLevel1 - nodeEye1).normalized, Vector3.Distance(nodeEye1, eyeLevel1), VisionBlockingLayers);
 
-            // 2. THE DESTINATION CHECK (CheckSphere)
-            // Ensures the final peek position we stepped to isn't shoved inside a solid pillar
             bool pos0IsPhysicallyClear = step0IsClear && !Physics.CheckSphere(eyeLevel0, checkRadius, VisionBlockingLayers);
             bool pos1IsPhysicallyClear = step1IsClear && !Physics.CheckSphere(eyeLevel1, checkRadius, VisionBlockingLayers);
 
-            // 3. THE LINE OF SIGHT CHECK (Thick SphereCast)
-            // Uses the thick radius to ensure the NPC's shoulders and gun won't clip through the corner when shooting
             bool canSeeFrom0 = pos0IsPhysicallyClear && !Physics.SphereCast(eyeLevel0, checkRadius, (targetEyeLevel - eyeLevel0).normalized, out _, Vector3.Distance(eyeLevel0, targetEyeLevel), VisionBlockingLayers);
             bool canSeeFrom1 = pos1IsPhysicallyClear && !Physics.SphereCast(eyeLevel1, checkRadius, (targetEyeLevel - eyeLevel1).normalized, out _, Vector3.Distance(eyeLevel1, targetEyeLevel), VisionBlockingLayers);
 
             Vector3 finalPeekPosition = Vector3.zero;
 
-            // --- SMART NODE SELECTION LOGIC --- 
             if (canSeeFrom0 && canSeeFrom1)
             {
-                // Both are clear! Pick the one physically closest to the player
                 float dist0 = Vector3.Distance(node0, TargetPosition);
                 float dist1 = Vector3.Distance(node1, TargetPosition);
                 finalPeekPosition = (dist0 < dist1) ? peekPos0 : peekPos1;
             }
             else if (canSeeFrom0)
             {
-                finalPeekPosition = peekPos0; // Only left is clear
+                finalPeekPosition = peekPos0;
             }
             else if (canSeeFrom1)
             {
-                finalPeekPosition = peekPos1; // Only right is clear
+                finalPeekPosition = peekPos1; 
             }
             else
             {
-                // BOTH SIDES ARE BLOCKED BY PROPS/WALLS!
-                // Add to blacklist so the AI doesn't keep trying this dead-end wall
                 Debug.Log("Both peek positions blocked.");
                 blacklistedCovers[currentCover] = TargetPosition;
                 failedToFindCover = true;
                 
-                // Immediately return to cover loop to find a new wall
                 yield return null;
                 continue;
             }
 
-            // Execute the valid peek
             if (NavMesh.SamplePosition(finalPeekPosition, out NavMeshHit peekHit, 2.0f, dog.agent.areaMask))
             {
                 isPeeking = true;
@@ -677,24 +708,16 @@ public class AiCoverMovement : MonoBehaviour
                     failedToFindCover = true;
                 }
 
-
                 dog.npc.SetDestination?.Invoke(safeHidePosition);
                 yield return new WaitUntil(() => AgentReachedDestination(dog.agent));
 
                 isPeeking = false;
 
-                // --- NEW: TACTICAL REPOSITIONING / FLANKING ---
                 currentPeekCount++;
                 if (currentPeekCount >= MaxPeeksBeforeMoving)
                 {
-                    // Add this perfectly good cover to the blacklist temporarily 
-                    // so the AI is forced to find a DIFFERENT spot.
                     blacklistedCovers[currentCover] = TargetPosition; 
-                    
-                    // Force the state machine to drop into Engage and walk around
                     failedToFindCover = true; 
-                    
-                    // Reset the counter for the next cover it finds
                     currentPeekCount = 0; 
                 }
             }

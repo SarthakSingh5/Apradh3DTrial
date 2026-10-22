@@ -21,16 +21,20 @@ public class AiEngageTargetState : AiState
 
     public void Update(Dog dog)
     {
-        // If no target, change to FindTarget state
-        if (!dog.targeting.HasTarget)
-        {
-            dog.stateMachine.ChangeState(AiStateId.FindTarget);
-        }
-        else if(dog.targeting.TargetInSight && dog.coverMovement.HasAnyCover(dog.targeting.TargetPosition))
+        if(dog.targeting.HasTarget && dog.targeting.TargetInSight && dog.coverMovement.HasAnyCover(dog.targeting.TargetPosition))
         {
             // If the target is in sight, change to Cover state
             dog.stateMachine.ChangeState(AiStateId.Cover);
         }
+        else if(dog.targeting.HasTarget && !dog.targeting.TargetInSight){
+            dog.stateMachine.ChangeState(AiStateId.Investigate);
+        }
+        // If no target, change to FindTarget state
+        else if (!dog.targeting.HasTarget)
+        {
+            dog.stateMachine.ChangeState(AiStateId.FindTarget);
+        }
+        
 
         // Update the sub-state machine (Follow, FlankLeft, FlankRight)
         subFSM.Update();

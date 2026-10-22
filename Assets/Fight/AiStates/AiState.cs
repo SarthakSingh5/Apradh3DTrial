@@ -9,7 +9,8 @@ public enum AiStateId
     FindTarget,
     AttackTarget,
     EngageTarget,
-    Cover
+    Cover,
+    Investigate
 
 }
 

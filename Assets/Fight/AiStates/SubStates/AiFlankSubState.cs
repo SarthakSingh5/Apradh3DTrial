@@ -61,29 +61,39 @@ public class AiFlankSubState : AiFollowSubState
 
     protected override void GoToTarget(Dog dog)
     {
-        float distance = dog.targeting.TargetDistance;
-        UpdateSpeed(dog, distance);
-
-        dog.npc.isPanicking = distance <= minDistance;
-
-        if (distance <= maxDistance && distance >= minDistance)
+        float distanceToPlayer = dog.targeting.TargetDistance;
+        
+        // --- DANGER ZONE SYSTEM ---
+        float dangerZoneRadius = 6.0f; // 6 meters lethal range
+        
+        if (distanceToPlayer <= dangerZoneRadius)
         {
-            MoveToFlank(dog);
+            // INSIDE DANGER ZONE: Strafe and suppress!
+            dog.agent.speed = dog.config.walkSpeed;
+            dog.agent.updateRotation = false; // Locks rotation so AiLookAt can aim at player
         }
-        else if (distance > maxDistance)
+        else
+        {
+            // OUTSIDE DANGER ZONE: Turn back and sprint!
+            dog.agent.speed = dog.config.runSpeed;
+            dog.agent.updateRotation = true; // NavMesh takes over rotation to look where it's running
+        }
+        // --------------------------
+
+        dog.npc.isPanicking = distanceToPlayer <= minDistance;
+
+        if (distanceToPlayer <= maxDistance && distanceToPlayer >= minDistance)
+        {
+            MoveToFlank(dog); // Uses your existing MoveToFlank logic
+        }
+        else if (distanceToPlayer > maxDistance)
         {
             dog.npc.canMove = true;
             dog.npc.SetDestination?.Invoke(dog.targeting.TargetPosition);
         }
-        else if (distance < minDistance)
+        else if (distanceToPlayer < minDistance)
         {
             GetAwayFrom(dog, dog.targeting.TargetPosition);
-        }
-
-        if (!dog.targeting.TargetInSight)
-        {
-            dog.npc.canMove = true;
-            dog.npc.SetDestination?.Invoke(dog.targeting.TargetPosition);
         }
     }
 

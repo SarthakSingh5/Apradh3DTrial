@@ -5,6 +5,13 @@ using UnityEngine.AI;
 using UnityEngine.Animations.Rigging;
 using UnityEngine.Events;
 
+public enum AimMode
+{
+    AutoCombat,  // Let AiLookAt decide based on target visibility
+    ForceAim,    // Gun ALWAYS UP (Investigate State)
+    ForceLower   // Gun ALWAYS DOWN (Ducking in Cover, Fleeing, Reloading)
+}
+
 [SelectionBase]
 [RequireComponent(typeof(Animator))]
 public class Npc : MonoBehaviour
@@ -152,6 +159,11 @@ public class Npc : MonoBehaviour
 
 
 
+    public AimMode currentAimMode = AimMode.AutoCombat;
+
+
+
+
     protected void Awake()
     {
         if (anim == null)
@@ -169,7 +181,7 @@ public class Npc : MonoBehaviour
             weapon = GetComponentInChildren<Weapon>();
         }
 
-        if(controller == null)
+        if (controller == null)
         {
             controller = GetComponentInChildren<NpcController>();
         }
@@ -223,7 +235,7 @@ public class Npc : MonoBehaviour
 
         // 4. Update the state
         // We add jerk and recoil heat to the existing bloom
-        currentBloom += (jerkBloom); 
+        currentBloom += (jerkBloom);
 
         // 5. Recovery & Combination
         // We Lerp the total bloom toward the current velocity-based baseline + heat

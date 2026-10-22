@@ -299,7 +299,7 @@ public partial class PlayerController : NpcController
             Quaternion targetRotation = Quaternion.LookRotation(motion);
 
             npc.transform.rotation = Quaternion.Lerp(npc.transform.rotation, targetRotation, MoveSmoothing * Time.deltaTime);
-        }
+        }  
 
     }
 
