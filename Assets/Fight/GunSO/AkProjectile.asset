@@ -33,7 +33,7 @@ MonoBehaviour:
   releaseSlideSound: {fileID: 8300000, guid: 10d9312ce26cb394381649fa48f4330b, type: 3}
   volume: 1
   pitchRandomness: 0.05
-  spreadMultiplier: 5
+  spreadMultiplier: 1
   bloomPerShot: 0.7
   bloomRecoveryRate: 8
   reloadDuration: 2

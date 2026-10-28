@@ -162,6 +162,20 @@ public class Npc : MonoBehaviour
     public AimMode currentAimMode = AimMode.AutoCombat;
 
 
+    [Header("Tactical Pressure")]
+    public float combatPressure = 0f;
+    public float pressureThresholdForCover = 0.8f;
+
+    public void AddPressure(float amount)
+    {
+        if (!Alive) return;
+
+        combatPressure += amount;
+        combatPressure = Mathf.Clamp01(combatPressure);
+    }
+
+
+
 
 
     protected void Awake()
@@ -194,6 +208,11 @@ public class Npc : MonoBehaviour
     private void Update()
     {
         CalculateDynamicBloom();
+        if (combatPressure > 0f)
+        {
+            combatPressure -= Time.deltaTime * 0.25f; 
+            combatPressure = Mathf.Max(0f, combatPressure);
+        }
     }
 
 

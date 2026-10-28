@@ -111,7 +111,7 @@ public class Weapon : NpcComponent
         if (fireMode.CanFire(state))
         {
             npc.AddRecoilBloom();
-            shooter.Shoot(muzzle, npc.currentBloom);
+            shooter.Shoot(muzzle, npc.currentBloom, this.transform);
             fireMode.OnFired(state);
             PlayWeaponSound(shooter.shotSound);
 

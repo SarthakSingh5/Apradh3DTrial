@@ -3,29 +3,26 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-
 [CreateAssetMenu(fileName = "Shooter", menuName = "Gun/Shooter/HitScan")]
 public class HitscanShooter : Shooter
 {
+	[Header("Tactical Pressure Settings")]
+	[SerializeField] private float suppressionRadius = 3.5f;
+	[SerializeField] private LayerMask npcLayerMask;
 
-
-	public override void Shoot(Transform muzzle, float bloom)
+	public override void Shoot(Transform muzzle, float bloom, Transform ownerTransform)
 	{
-		base.Shoot(muzzle, bloom);
-		SpawnHitScanProjectile(muzzle);
+		base.Shoot(muzzle, bloom, ownerTransform);
+		SpawnHitScanProjectile(muzzle, bloom, ownerTransform);
 	}
 
-
-	Vector3 ComputeShootingDirection(Transform muzzle)
+	Vector3 ComputeShootingDirection(Transform muzzle, float bloom)
 	{
-		Vector3 Direction = muzzle.forward;
-
-		float spreadX = Random.Range(-MaxSpreadAngle, MaxSpreadAngle) * 0.5f;
-		float spreadY = Random.Range(-MaxSpreadAngle, MaxSpreadAngle) * 0.5f;
-
-		return Quaternion.Euler(spreadX, spreadY, 0f) * Direction;
+		// Upgraded to use dynamic bloom spread matching your ProjectileShooter
+		Vector2 spread = Random.insideUnitCircle * bloom * spreadMultiplier;
+		Quaternion spreadRotation = Quaternion.Euler(spread.x, spread.y, 0);
+		return muzzle.rotation * spreadRotation * Vector3.forward;
 	}
-
 
 	void ApplyHitImpulse(RaycastHit hit, Vector3 direction)
 	{
@@ -35,51 +32,71 @@ public class HitscanShooter : Shooter
 		}
 	}
 
-
-	void SpawnHitScanProjectile(Transform muzzle)
+	void SpawnHitScanProjectile(Transform muzzle, float bloom, Transform ownerTransform)
 	{
-		Ray ray = new Ray(muzzle.position, ComputeShootingDirection(muzzle));
+		Vector3 shootDirection = ComputeShootingDirection(muzzle, bloom);
+		Ray ray = new Ray(muzzle.position, shootDirection);
+		Vector3 endPoint = ray.origin + ray.direction * MaxRange;
 
 		RaycastHit[] hits = Physics.RaycastAll(ray, MaxRange, HitMask, QueryTriggerInteraction.Ignore);
-
 		System.Array.Sort(hits, (a, b) => { return a.distance.CompareTo(b.distance); });
-
 
 		foreach (RaycastHit hit in hits)
 		{
-			
-
-			// looking and damaging a component that implements the IDamageable interface
-			//
 			IDamageable damageable = hit.collider.GetComponentInParent<IDamageable>();
 
 			if (damageable != null)
 			{
 				float damage = Damage + Random.Range(0f, DamageRandom);
-
 				damageable.Damage(damage);
-
-				MonoBehaviourHelper.RunCoroutine(CR_SpawnTracer(muzzle.position, hit.point));
-
 				ApplyHitImpulse(hit, ray.direction);
-
-				return;
+				
+				endPoint = hit.point;
+				break;
 			}
 			else
 			{
-				MonoBehaviourHelper.RunCoroutine(CR_SpawnTracer(muzzle.position, hit.point));
-
 				ApplyHitImpulse(hit, ray.direction);
+				endPoint = hit.point;
 
-				// we hit a wall or obstacle, we need to return.
-				return;
+				// --- IMPACT PRESSURE ---
+				Collider[] impactSuppression = Physics.OverlapSphere(endPoint, suppressionRadius, npcLayerMask);
+				foreach (Collider col in impactSuppression)
+				{
+					if (col.TryGetComponent(out Npc npc))
+					{
+						if (ownerTransform != null && ownerTransform.IsChildOf(npc.transform)) continue;
+
+						float distance = Vector3.Distance(endPoint, npc.transform.position);
+						float intensity = 1f - (distance / suppressionRadius);
+						npc.AddPressure(intensity * 0.4f);
+					}
+				}
+				break;
 			}
 		}
 
-		MonoBehaviourHelper.RunCoroutine(CR_SpawnTracer(muzzle.position, ray.origin + ray.direction * MaxRange));
+		// --- WHIZ-BY PRESSURE ---
+		// Draws one instantaneous capsule from the barrel to the final hit point
+		List<Npc> suppressedNpcs = new List<Npc>();
+		Collider[] nearMisses = Physics.OverlapCapsule(muzzle.position, endPoint, suppressionRadius, npcLayerMask);
+		
+		foreach (Collider col in nearMisses)
+		{
+			if (col.TryGetComponent(out Npc npc))
+			{
+				if (ownerTransform != null && ownerTransform.IsChildOf(npc.transform)) continue;
+
+				if (!suppressedNpcs.Contains(npc))
+				{
+					npc.AddPressure(0.15f);
+					suppressedNpcs.Add(npc);
+				}
+			}
+		}
+
+		MonoBehaviourHelper.RunCoroutine(CR_SpawnTracer(muzzle.position, endPoint));
 	}
-
-
 
 	IEnumerator CR_SpawnTracer(Vector3 start, Vector3 end)
 	{
@@ -91,22 +108,16 @@ public class HitscanShooter : Shooter
 		while (elapsedTime < tracerLifetime)
 		{
 			elapsedTime += Time.deltaTime;
-
 			float t = Mathf.Clamp01(elapsedTime * tracerSpeed / distance);
-
-			// Update tracer position to move towards the end point
 			Vector3 currentPoint = Vector3.Lerp(start, end, t);
+			
 			tracer.SetPosition(0, start);
 			tracer.SetPosition(1, currentPoint);
 
 			yield return null;
 		}
 
-		// Finalize position and destroy tracer
 		tracer.SetPosition(1, end);
 		Destroy(tracer.gameObject, tracerLifetime);
 	}
-
 }
-
-

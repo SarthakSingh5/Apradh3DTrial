@@ -17,7 +17,7 @@ public class AiInvestigateState : AiState
         dog.npc.canMove = true;
         dog.npc.currentAimMode = AimMode.ForceAim; // Gun UP
         
-        dog.agent.speed = dog.config.walkSpeed * 0.7f; // Slow, cautious walk
+        dog.agent.speed = dog.config.walkSpeed; // walk
         dog.agent.updateRotation = true; 
 
         investigateCenter = dog.targeting.TargetPosition;

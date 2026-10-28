@@ -4,11 +4,12 @@ public class NpcAnimator : NpcComponent
 {
     private float lastYRotation;
     public float targetPosture = 1.0f;
-    private float currentPosture = 1.0f; 
+    private float currentPosture = 1.0f;
     public float currentYRotation;
     public float turnSpeed;
-    
-    // NEW: Tracks how long the NPC has been sitting still
+    private float postureHoldTimer = 0f;
+    private float lockedPosture = 1.0f;
+
     private float timeAtRest = 0f;
 
     private void Start()
@@ -34,34 +35,73 @@ public class NpcAnimator : NpcComponent
         float currentAnimTurn = npc.anim.GetFloat("Turn");
         npc.anim.SetFloat("Turn", Mathf.Lerp(currentAnimTurn, turnParam, Time.deltaTime * 1f));
 
-        // --- 3. POSTURE ---
-        // (CRITICAL: You must default to 1.0f every frame so they stand back up when leaving cover!)
+        // --- 3. POSTURE (Dynamic Human Movement) ---
+        targetPosture = 1.0f; 
         
+        // 1. Natural human hunch when running or aiming
+        if (forwardSpeed > 3f || npc.Aiming)
+        {
+            targetPosture = 0.85f; 
+        }
+
+        // Check if this character is the player
+        bool isPlayer = npc.controller is PlayerController;
+
+        // 2. Evaluate Pressure (ONLY FOR AI)
+        // The player retains full manual control of their posture.
+        if (!isPlayer)
+        {
+            if (npc.combatPressure > 0.5f)
+            {
+                lockedPosture = 0.2f; // Hard duck
+                postureHoldTimer = 3.0f; // Sustain for 3 seconds
+            }
+            else if (npc.combatPressure > 0.1f && lockedPosture > 0.2f)
+            {
+                lockedPosture = 0.5f; // Moderate flinch
+                
+                if (postureHoldTimer < 1.5f) 
+                {
+                    postureHoldTimer = 1.5f; 
+                }
+            }
+        }
+
+        // 3. Apply the Sustain Timer (Also bypassed for the player)
+        if (postureHoldTimer > 0f && !isPlayer)
+        {
+            postureHoldTimer -= Time.deltaTime;
+            targetPosture = lockedPosture; 
+        }
+        else
+        {
+            lockedPosture = 1.0f; 
+        }
+
+        // 4. Manual Overrides (Cover / Ducking - Applies to both AI and Player)
         if (npc.inCover || npc.currentAimMode == AimMode.ForceLower)
         {
             targetPosture = 0.0f; 
         }
 
-        currentPosture = Mathf.Lerp(currentPosture, targetPosture, Time.deltaTime * 5f);
+        // 5. Asymmetric Lerp (Fast drop, smooth rise)
+        float postureLerpSpeed = (targetPosture < currentPosture) ? 15f : 4f;
+
+        currentPosture = Mathf.Lerp(currentPosture, targetPosture, Time.deltaTime * postureLerpSpeed);
         npc.anim.SetFloat("Posture", currentPosture);
 
-        // --- 4. RELAXATION (The New Logic) ---
-        // Check if the NPC's movement and turning speeds are practically zero
-        bool isStill = Mathf.Abs(forwardSpeed) < 0.1f && Mathf.Abs(rightSpeed) < 0.1f && turnParam< 0.1f;
+        // --- 4. RELAXATION ---
+        bool isStill = Mathf.Abs(forwardSpeed) < 0.1f && Mathf.Abs(rightSpeed) < 0.1f && turnParam < 0.1f;
 
-        // If completely still, heavily crouched, and not actively aiming
-        if (isStill && currentPosture < 0.5f) 
+        if (isStill && currentPosture == 0f) 
         {
-            // Divide by 4f to make the transition take 2 full seconds of sitting still
             timeAtRest += Time.deltaTime;
         }
         else
         {
-            // Instantly snap to high-alert combat ready pose the moment they move or aim
             timeAtRest = 0f; 
         }
 
-        // Clamp between 0 (Combat Ready) and 1 (Fully Relaxed) and send to Blend Tree
         float relaxationParam = Mathf.Clamp01(timeAtRest);
         npc.anim.SetFloat("Relaxation", relaxationParam);
 

@@ -75,7 +75,7 @@ public class Shooter : ScriptableObject
     public int magSize = 30;
 
     
-    public virtual void Shoot(Transform muzzle, float bloom)
+    public virtual void Shoot(Transform muzzle, float bloom, Transform ownerTransform)
     {
         
 
