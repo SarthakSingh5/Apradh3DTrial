@@ -17648,13 +17648,14 @@ GameObject:
   - component: {fileID: 2023001044695806372}
   - component: {fileID: 2744812314497282993}
   - component: {fileID: 8977192245196932289}
+  - component: {fileID: 702460055330049312}
   m_Layer: 10
   m_Name: NPC 1
   m_TagString: NPC
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &7233055651601345047
 Transform:
   m_ObjectHideFlags: 0
@@ -17770,6 +17771,8 @@ MonoBehaviour:
   weapon: {fileID: 0}
   controller: {fileID: 0}
   currentAimMode: 0
+  combatPressure: 0
+  pressureThresholdForCover: 0.8
 --- !u!114 &9049865486904039620
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17855,7 +17858,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   npc: {fileID: 0}
   dog: {fileID: 0}
-  points: 100
+  points: 10000
   maxPoints: 100
 --- !u!114 &2023001044695806372
 MonoBehaviour:
@@ -17933,6 +17936,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   team: 1
+--- !u!114 &702460055330049312
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5761609020053024611}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7557ff87dc52f414ab0f3f775f1ea136, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  spineBone: {fileID: 3101934287152976972}
+  neckBone: {fileID: 3708121819686324003}
+  maxSpineCrunch: 15
+  maxNeckCrunch: 20
+  headMoveSpeed: 3
+  spineShiftSpeed: 1.5
 --- !u!1 &6042231828645055669
 GameObject:
   m_ObjectHideFlags: 0

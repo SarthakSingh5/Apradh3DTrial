@@ -79,10 +79,10 @@ public class NpcAnimator : NpcComponent
         }
 
         // 4. Manual Overrides (Cover / Ducking - Applies to both AI and Player)
-        if (npc.inCover || npc.currentAimMode == AimMode.ForceLower)
-        {
-            targetPosture = 0.0f; 
-        }
+        // if (npc.inCover || npc.currentAimMode == AimMode.ForceLower)
+        // {
+        //     targetPosture = 0.0f; 
+        // }
 
         // 5. Asymmetric Lerp (Fast drop, smooth rise)
         float postureLerpSpeed = (targetPosture < currentPosture) ? 15f : 4f;
